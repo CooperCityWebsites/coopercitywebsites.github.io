@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game of Websites</title>
+  <meta name="description" content="Every website hosted on rainbowroar14.github.io.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231a1612'/%3E%3Cpath d='M8 22V10h2.2l3.3 7.2L16.8 10H19v12h-1.8v-7.6L14.2 22h-1.6l-3-7.6V22H8z' fill='%23f3ecdf'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="mast">
+    <p class="kicker" id="kicker">rainbowroar14.github.io</p>
+    <h1>Game of Websites</h1>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Sections">
+      <button type="button" role="tab" id="tab-sites" data-tab="sites" aria-selected="true">Unblocked</button>
+      <button type="button" role="tab" id="tab-mods" data-tab="mods" aria-selected="false">1.21.1 NeoForge</button>
+      <button type="button" role="tab" id="tab-trash" data-tab="trash" aria-selected="false">Trash</button>
+    </div>
+    <p class="lede" id="lede">Complexity comes from non-blank lines of source code in each repo. Simple is under 1,000. Moderate is under 4,000. Complex is under 10,000. Very complex is 10,000 or more.</p>
+    <form class="tools" role="search" onsubmit="return false">
+      <label class="search">
+        <span class="sr" id="search-label">Search sites</span>
+        <input id="search" type="search" placeholder="Search by name or title" autocomplete="off">
+      </label>
+      <div class="filters sorts" data-for="sites" role="group" aria-label="Sort sites">
+        <button type="button" data-sort="lines" aria-pressed="true">Most code</button>
+        <button type="button" data-sort="updated" aria-pressed="false">Newest</button>
+      </div>
+      <div class="filters sorts" data-for="mods" role="group" aria-label="Sort mods" hidden>
+        <button type="button" data-sort="name" aria-pressed="true">Name</button>
+        <button type="button" data-sort="size" aria-pressed="false">Largest</button>
+      </div>
+    </form>
+    <p id="count" class="count" aria-live="polite">Loading sites…</p>
+  </header>
+  <main>
+    <ul id="list" class="list"></ul>
+    <p id="empty" class="empty" hidden>No sites match that search.</p>
+  </main>
+  <aside class="dock" id="dock">
+    <button type="button" class="disc" id="play" aria-label="Play" aria-pressed="false">
+      <img src="cd.png" alt="">
+    </button>
+    <div class="now">
+      <p class="song" id="song-title">Morning</p>
+      <p class="song-by">Kevin MacLeod · incompetech.com</p>
+      <p class="song-time"><span id="song-now">0:00</span><span id="song-end">0:00</span></p>
+      <label class="seek">
+        <span class="sr">How far into the song</span>
+        <input id="seek" type="range" min="0" max="1000" value="0">
+      </label>
+      <button type="button" id="mute" aria-pressed="false">Mute</button>
+    </div>
+    <audio id="song" preload="metadata"></audio>
+  </aside>
+  <button type="button" id="sim-toggle" aria-pressed="false">Constant simulation</button>
+  <div id="sim" hidden>
+    <canvas id="balls"></canvas>
+    <div class="swirls" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div id="dvds"></div>
+    <div id="runners"></div>
+    <img id="corner-skeleton" src="skeleton-dance.gif" alt="">
+    <div id="popups"></div>
+    <section id="runner-pop" aria-label="Gameplay">
+      <p class="pop-title">Gameplay <button type="button" class="pop-close" id="close-game">Close</button></p>
+      <canvas id="runner" width="280" height="420"></canvas>
+    </section>
+  </div>
+  <script src="main.js"></script>
+  <script src="player.js"></script>
+  <script src="sim.js"></script>
+</body>
+</html>
