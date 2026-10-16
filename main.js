@@ -28,6 +28,14 @@ const copy = {
     empty: "No mods match that search.",
     noun: "mods"
   },
+  old: {
+    kicker: "Old",
+    lede: "Moved off the main page. These only show up here.",
+    search: "Search old sites",
+    label: "Search old sites",
+    empty: "No old sites match that search.",
+    noun: "old sites"
+  },
   trash: {
     kicker: "Trash",
     lede: "Moved off the main page. These only show up here.",
@@ -41,7 +49,7 @@ const copy = {
 let sites = [];
 let mods = [];
 let tab = "sites";
-let sort = { sites: "lines", mods: "name" };
+let sort = { sites: "lines", old: "lines", mods: "name" };
 
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (char) => ({
@@ -86,8 +94,8 @@ function modMatches(mod, query) {
 }
 
 function siteCard(site) {
-  const label = site.trash ? "Trash" : site.group === "unblocked" ? "Unblocked" : "Project";
-  const tagClass = site.trash ? "trash" : site.group;
+  const label = site.trash ? "Trash" : site.old ? "Old" : site.group === "unblocked" ? "Unblocked" : "Project";
+  const tagClass = site.trash ? "trash" : site.old ? "old" : site.group;
   const complexity = rate(site.lines);
   return `<li class="card">
     <a class="site" href="${escapeHtml(site.url)}" target="_blank" rel="noreferrer">
@@ -133,10 +141,10 @@ function render() {
   const query = search.value.trim().toLowerCase();
   let shown;
   let total;
-  if (tab === "sites") {
-    const source = sites.filter((site) => !site.trash);
+  if (tab === "sites" || tab === "old") {
+    const source = sites.filter((site) => !site.trash && (tab === "old" ? site.old : !site.old));
     shown = source.filter((site) => siteMatches(site, query));
-    shown.sort((a, b) => sort.sites === "lines" ? b.lines - a.lines : b.updated.localeCompare(a.updated));
+    shown.sort((a, b) => sort[tab] === "lines" ? b.lines - a.lines : b.updated.localeCompare(a.updated));
     total = source.length;
     list.innerHTML = shown.map(siteCard).join("");
   } else if (tab === "mods") {
@@ -169,7 +177,7 @@ function showTab(next) {
   for (const button of tabs.querySelectorAll("button")) {
     button.setAttribute("aria-selected", String(button.dataset.tab === tab));
   }
-  sorts.sites.hidden = tab !== "sites";
+  sorts.sites.hidden = tab !== "sites" && tab !== "old";
   sorts.mods.hidden = tab !== "mods";
   render();
 }
@@ -188,6 +196,7 @@ for (const [name, group] of Object.entries(sorts)) {
     const button = event.target.closest("button[data-sort]");
     if (!button) return;
     sort[name] = button.dataset.sort;
+    if (name === "sites") sort.old = button.dataset.sort;
     for (const item of group.querySelectorAll("button")) {
       item.setAttribute("aria-pressed", String(item === button));
     }

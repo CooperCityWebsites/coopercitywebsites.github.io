@@ -195,6 +195,7 @@ h1 {
 .tag.complex { color: #9a4d12; }
 .tag.very { color: var(--stamp); }
 .tag.trash { color: var(--muted); }
+.tag.old { color: var(--muted); }
 
 .title {
   margin: 0;
