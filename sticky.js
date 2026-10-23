@@ -45,29 +45,41 @@ for(let k=1;k<=ROUNDS.length;k++){const old=V.filter(v=>v.born<k).sort((p,q)=>p.
 V.sort((p,q)=>((p.a%6.283)+6.283)%6.283-((q.a%6.283)+6.283)%6.283);
 const springE=s=>s<=0?0:1+Math.exp(-5.5*s)*Math.sin(16*s)*.09;  // elastic snap after release
 const smooth3=x=>{x=clamp(x);return x*x*(3-2*x);};
-function rAt(v,u){ // radius (ellipse-normalised) of vertex v at time u
-  let r=v.born===0?R_T*backE(u/T0,1.4):null;
-  for(let k=Math.max(1,v.born);k<=ROUNDS.length;k++){const s=T0+(k-1)*RD,g=smooth3((u-s-.55)/.6),rel=u-s-1.15;
-    if(k===v.born){if(u<s+.55)return null;r=lerpR(v,u,k)+(ROUNDS[k-1]-lerpR(v,u,k))*g;if(rel>0)r=ROUNDS[k-1]*springE(rel);}
-    else{const tgt=ROUNDS[k-1]*.96;r=r+(tgt-r)*g;}}
+// fixed-seed RNG: every mouse gets its own start time, approach direction/distance, speed and pull length
+const RNG=(s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;})(20261023);
+const rr=(a,b)=>a+RNG()*(b-a);
+V.forEach(v=>{if(!v.born){v.rel=T0;v.tgt=R_T;}});
+for(let k=1;k<=ROUNDS.length;k++)V.filter(v=>v.born===k).sort(()=>RNG()-.5).forEach(v=>{
+  v.run=rr(.35,.95);v.drag=rr(.45,.8);v.s=Math.max(v.A.rel,v.B.rel)+rr(0,1.1)-(k===1?.0:.25);  // staggered, overlapping arrivals
+  v.s=Math.max(v.s,Math.max(v.A.rel,v.B.rel)-.2);
+  v.g0=v.s+v.run;v.rel=v.g0+v.drag;v.tgt=ROUNDS[k-1]*rr(.82,1.14);                                   // each pulls a different length
+  v.ang=v.a+rr(-.75,.75);v.far=rr(.45,1.05);});
+// per-round drift window for the older vertices (they ease outward while that round's pulls happen)
+const WIN=ROUNDS.map((R,k)=>{const vs=V.filter(v=>v.born===k+1);return [Math.min(...vs.map(v=>v.g0)),Math.max(...vs.map(v=>v.rel))];});
+V.forEach(v=>v.drift=ROUNDS.map(()=>rr(.88,1.04)));
+function rAt(v,u){ // radius (ellipse-normalised) of vertex v at time u; null = not yet grabbed (sits on its edge midpoint)
+  let r;
+  if(!v.born)r=R_T*backE(u/T0,1.4);
+  else{if(u<v.g0)return null;const g=smooth3((u-v.g0)/v.drag),m=lerpR(v,u);r=m+(v.tgt-m)*g;if(u>v.rel)r=v.tgt*springE(u-v.rel);}
+  for(let k=Math.max(1,v.born+1);k<=ROUNDS.length;k++){const [a,b]=WIN[k-1],g=smooth3((u-a)/(b-a+.001)),tgt=Math.max(r,ROUNDS[k-1]*.96*v.drift[k-1]);r=r+(tgt-r)*g;}
   return r;}
 const RX=()=>W*.5,RY=()=>H*.46;
 function pos(v,u){const r=rAt(v,u);if(r===null){const a=pos(v.A,u),b=pos(v.B,u);return [(a[0]+b[0])/2,(a[1]+b[1])/2];}
   return [W/2+Math.cos(v.a)*r*RX(),H/2+Math.sin(v.a)*r*RY()];}
-function lerpR(v,u,k){const a=pos(v.A,u),b=pos(v.B,u),x=(a[0]+b[0])/2-W/2,y=(a[1]+b[1])/2-H/2;return Math.hypot(x/RX(),y/RY());}
-function polyPath(u){const P=new Path2D();const live=V.filter(v=>v.born===0||u>=T0+(v.born-1)*RD);
+function lerpR(v,u){const a=pos(v.A,u),b=pos(v.B,u),x=(a[0]+b[0])/2-W/2,y=(a[1]+b[1])/2-H/2;return Math.hypot(x/RX(),y/RY());}
+function polyPath(u){const P=new Path2D();const live=V.filter(v=>!v.born||u>=v.s);
   live.forEach((v,i)=>{const p=pos(v,u);i?P.lineTo(p[0],p[1]):P.moveTo(p[0],p[1]);});P.closePath();return P;}
 // grab-mice: one per new vertex (pooled DOM nodes, same style as the letter mice)
 const GM=V.filter(v=>v.born>0).map(v=>{const m=document.createElement('div');m.className='mouse';
   m.innerHTML='<span class="mc"></span><span class="mn">'+v.name+'</span>';sec.append(m);return {v,m};});
-function grabMice(u){for(const g of GM){const s=T0+(g.v.born-1)*RD,k=u-s;
-  if(k<0||k>2.0){if(g.on){g.m.style.opacity=0;g.on=0;}continue;}
-  const p=pos(g.v,u),dx=Math.cos(g.v.a),dy=Math.sin(g.v.a),far=Math.max(W,H)*.75;let x,y,sq;
-  if(k<.55){const e=ease(k/.55);x=p[0]+dx*far*(1-e);y=p[1]+dy*far*(1-e);sq=Math.sin(k*30)*.12;}       // scurry in to the midpoint
-  else if(k<1.15){x=p[0];y=p[1];sq=-.12;}                                                          // grab + drag outward
-  else{const e=clamp((k-1.15)/.8);x=p[0]+dx*far*e*e;y=p[1]+dy*far*e*e;sq=Math.sin(k*34)*.14;}      // let go, run off
+function grabMice(u){for(const g of GM){const v=g.v,k=u-v.s,out=u-v.rel;
+  if(k<0||out>.9){if(g.on){g.m.style.opacity=0;g.on=0;}continue;}
+  const p=pos(v,u),dx=Math.cos(v.ang),dy=Math.sin(v.ang),far=Math.max(W,H)*v.far;let x,y,sq;
+  if(u<v.g0){const e=ease(k/v.run);x=p[0]+dx*far*(1-e);y=p[1]+dy*far*(1-e);sq=Math.sin(k*30/v.run*.5)*.12;}   // scurry in (own speed/direction)
+  else if(out<0){x=p[0];y=p[1];sq=-.12;}                                                                   // grab + drag outward
+  else{const e=clamp(out/.9),ox=Math.cos(v.a),oy=Math.sin(v.a);x=p[0]+ox*far*e*e;y=p[1]+oy*far*e*e;sq=Math.sin(out*34)*.14;}  // let go, run off
   g.m.style.opacity=1;g.on=1;g.m.style.transform=`translate(${x-3}px,${y-3}px) scale(${1.5*(1+sq)},${1.5*(1-sq)})`;}}
-const T_END=T0+ROUNDS.length*RD+.5;
+const T_END=Math.max(...V.map(v=>v.rel||0))+.9;
 const ANCH=[[-.74,.08],[-.5,.62],[.62,-.36],[.3,-.68],[.6,.5],[-.4,-.66],[-.72,-.3],[.04,.74]];
 function SPS(){return Math.min(H/459,W/300);}
 function mkPat(c2){const c=document.createElement('canvas');c.width=c.height=28;const g=c.getContext('2d');g.fillStyle='#e7e5e4';g.beginPath();g.arc(14,14,1.3,0,7);g.fill();return c2.createPattern(c,'repeat');}
@@ -83,7 +95,7 @@ function paint(g,paths,soft){ // glossy cream: drop shadow (blurred only in the 
 function drawSplat(u,final){if(!pat)pat=mkPat(cx);cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,W,H);
   paint(cx,[polyPath(Math.min(u,T_END))],!!final);if(!final)grabMice(u);else GM.forEach(g=>g.m.style.opacity=0);}
 function layoutExtras(){const es=Math.max(.45,Math.min(1,W/1100,H/950));extras.style.setProperty('--es',es.toFixed(3));
-  [...extras.children].forEach((el,k)=>{const a=ANCH[k%ANCH.length];let x=W/2+a[0]*RX()*.98,y=H/2+a[1]*RY()*.98;
+  [...extras.children].forEach((el,k)=>{const a=(W<600&&k===0)?[-.42,-.4]:ANCH[k%ANCH.length];let x=W/2+a[0]*RX()*.98,y=H/2+a[1]*RY()*.98;
     const hw=el.offsetWidth*es/2+10,hh=el.offsetHeight*es/2+10;x=Math.max(hw,Math.min(W-hw,x));y=Math.max(hh,Math.min(H-hh,y));
     el.style.left=x+'px';el.style.top=y+'px';});}
 function resize(){const r=sec.getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(1.5,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;layoutExtras();}
