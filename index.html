@@ -30,7 +30,22 @@ const T_LET=2.2, T_FLASH1=2.25, T_FAN=2.55, T_EDGE=2.75, D_EDGE=1.7, T_BR=4.6, D
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const easeOutQuint=t=>1-Math.pow(1-t,5), easeOutBack=t=>{const c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);};
 const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, easeOutCubic=t=>1-Math.pow(1-t,3);
-let sc=0,baseOy=0,hintEl=document.getElementById('hint'),scrolled=false;
+// ---- pointer (mouse/touch) interaction: speed-scaled gentle push
+let ptr={on:false,cx:0,cy:0,pcx:0,pcy:0,vx:0,vy:0,first:true};
+addEventListener('pointermove',e=>{ptr.cx=e.clientX;ptr.cy=e.clientY;if(ptr.first){ptr.pcx=ptr.cx;ptr.pcy=ptr.cy;ptr.first=false;}ptr.on=true;},{passive:true});
+addEventListener('pointerdown',e=>{ptr.cx=ptr.pcx=e.clientX;ptr.cy=ptr.pcy=e.clientY;ptr.first=false;ptr.on=true;},{passive:true});
+addEventListener('pointerup',e=>{if(e.pointerType!=='mouse'){ptr.on=false;ptr.first=true;}},{passive:true});
+document.addEventListener('pointerleave',()=>{ptr.on=false;ptr.first=true;});
+function updatePointer(dt){ // smoothed screen-space velocity (css px/s); decays to 0 when still
+  const ivx=(ptr.cx-ptr.pcx)/dt,ivy=(ptr.cy-ptr.pcy)/dt;ptr.pcx=ptr.cx;ptr.pcy=ptr.cy;
+  const k=1-Math.exp(-14*dt);ptr.vx+=(ivx-ptr.vx)*k;ptr.vy+=(ivy-ptr.vy)*k;
+  if(!ptr.on){ptr.vx*=Math.exp(-8*dt);ptr.vy*=Math.exp(-8*dt);}}
+function pushAt(x,y,pxs,pys,gain,out,dt){ // velocity change (canvas px/s) for object at canvas-screen (x,y)
+  const R=120/PX,dx=x-pxs,dy=y-pys,d=Math.hypot(dx,dy);if(d>=R)return null;
+  const sp=Math.hypot(ptr.vx,ptr.vy);if(sp<20)return null;
+  const s=Math.min(1,sp/1200),f=s*(1-d/R)**2,vx=ptr.vx/PX,vy=ptr.vy/PX,inv=d>0?1/d:0;
+  return [(vx*gain+dx*inv*out*s)*f*dt,(vy*gain+dy*inv*out*s)*f*dt];}
+let PXs=-1e4,PYs=-1e4,sc=0,baseOy=0,hintEl=document.getElementById('hint'),scrolled=false;
 let letters=[],chunks=[],others=[],logoC,logoX,logoD,buf,full;
 function resize(){
   const lwv=lw||720,lhv=lh||300;
@@ -103,7 +118,7 @@ function radialFlash(cx,cy,R,f,warm){
 // ---- rose petals (pixel sprites)
 // minimal petals: 3-5 px teardrops/ovals, 1-2 flat shades
 const PETAL_SHAPES=[[".O","OO","HO"],["OO","OH",".O"],[".O.","OHO",".O."],["OO","HO"],["O.","OH",".O"]];
-const PETAL_COLS=[["#7a0c14","#5c0810"],["#7a0c14","#7a0c14"]]; // single dark red (+ one darker shade)
+const PETAL_COLS=[["#941420","#741019"],["#941420","#941420"]]; // single dark red (+ one darker shade)
 const petalSprites=[];
 for(const sh of PETAL_SHAPES)for(const [o,h] of PETAL_COLS){
   const c=document.createElement('canvas');c.width=sh[0].length;c.height=sh.length;const x=c.getContext('2d');
@@ -117,11 +132,11 @@ function makePetal(x,y,burst){
     rot:Math.random()*6.283,vr:(Math.random()-.5)*3,term:22+Math.random()*18,life:0,sc:3};}
 function updatePetals(dt){
   if(!petalBurst&&time>=T_FIN){petalBurst=true;const n=40+(Math.random()*30|0);for(let i=0;i<n;i++)petals.push(makePetal(ox+CX,oy+CY+sc,true));nextPetal=1.5;}
-  if(petalBurst){nextPetal-=dt;if(nextPetal<=0){petals.push(makePetal(ox+CX+(Math.random()-.5)*Math.max(lw*1.3,W*.8),baseOy-20-Math.random()*40,false));nextPetal=.6+Math.random()*1.2;}}
   ctx.imageSmoothingEnabled=false;
   for(let i=petals.length-1;i>=0;i--){const p=petals[i];p.life+=dt;
     const drag=Math.exp(-2.4*dt);p.vx*=drag;p.vy*=drag;           // air drag kills burst force
     p.vy+=22*dt; if(p.vy>p.term)p.vy+=(p.term-p.vy)*(1-Math.exp(-3*dt)); // low gravity, small terminal velocity
+    {const im=pushAt(p.x,p.y-sc,PXs,PYs,2.6,140,dt);if(im){p.vx+=im[0];p.vy+=im[1];}} // keeps momentum; drag restores drift
     const sway=Math.sin(p.ph+p.life*p.fr)*p.sw;                   // feather flutter
     p.x+=(p.vx+sway)*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt;
     const pageH=document.documentElement.scrollHeight/PX,fade=clamp((pageH-p.y)/(H*.4));if(p.y>pageH+10||fade<=0){petals.splice(i,1);continue;}
@@ -139,13 +154,21 @@ function frame(ts){
   if(last===null)last=ts;let dt=(ts-last)/1000;last=ts;dt=Math.min(Math.max(dt,0),1/20);
   if(!ready){requestAnimationFrame(frame);return;}
   time+=dt;
+  updatePointer(dt);PXs=ptr.cx/PX;PYs=ptr.cy/PX;
   sc=scrollY/PX; oy=baseOy-Math.round(sc); if(scrollY>20)scrolled=true;
   hintEl.style.opacity=(time>T_FIN+1&&!scrolled&&scrollY<20)?'0.85':'0';
   ctx.globalAlpha=1;ctx.fillStyle='#07060d';ctx.fillRect(0,0,W,H);
   for(const s of stars){
     s.x-=s.v*dt;if(s.x<0)s.x+=W;
+    {const hy=(((s.y-sc*.35)%H)+H)%H;s.ox=s.ox||0;s.oy=s.oy||0;s.ovx=s.ovx||0;s.ovy=s.ovy||0;
+     const im=pushAt(s.x+s.ox,hy+s.oy,PXs,PYs,2.2,90,dt);if(im){s.ovx+=im[0];s.ovy+=im[1];}
+     if(time>=T_FIN&&!s.hit){ // shockwave ring from logo centre: nearer stars get hit first
+       const dx=s.x-(ox+CX),dy=hy-(oy+CY),d=Math.hypot(dx,dy),r=(time-T_FIN)*520/PX*1.5;
+       if(d<=r){s.hit=1;const RM=Math.max(W,H)*.8,f=Math.max(0,1-d/RM)**1.5,inv=d>0?1/d:0;s.ovx+=dx*inv*230*f;s.ovy+=dy*inv*230*f;}}
+     const K=38,C=7.5;s.ovx+=(-K*s.ox-C*s.ovx)*dt;s.ovy+=(-K*s.oy-C*s.ovy)*dt; // spring home, damped
+     s.ox+=s.ovx*dt;s.oy+=s.ovy*dt;const m=Math.hypot(s.ox,s.oy),M=18/PX;if(m>M){s.ox*=M/m;s.oy*=M/m;}}
     const b=.5+.5*Math.sin(s.p+time*s.s),l=Math.round(80+175*b);ctx.fillStyle=`rgb(${l},${l},${Math.min(255,l+30)})`;
-    const x=s.x|0,y=(((s.y-sc*.35)%H)+H)%H|0,ss=PX<2?2:1;ctx.fillRect(x,y,ss,ss);
+    const x=(s.x+s.ox)|0,y=((((s.y-sc*.35)%H)+H)%H+s.oy)|0,ss=PX<2?2:1;ctx.fillRect(x,y,ss,ss);
     if(s.big&&b>.7){ctx.fillStyle=`rgba(150,160,220,${(b-.5)*1.5})`;ctx.fillRect(x-1,y,1,1);ctx.fillRect(x+1,y,1,1);ctx.fillRect(x,y-1,1,1);ctx.fillRect(x,y+1,1,1);}
   }
   nextShoot-=dt;if(nextShoot<=0){spawnShoot();nextShoot=.8+Math.random()*1.6;}
