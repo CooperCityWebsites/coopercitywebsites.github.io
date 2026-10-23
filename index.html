@@ -103,17 +103,17 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #rres .shine{position:absolute;inset:0;pointer-events:none;-webkit-mask:url(px/quartz.png?v=ebd9439c) 0 0/100% 100%;mask:url(px/quartz.png?v=ebd9439c) 0 0/100% 100%;overflow:hidden;opacity:0}
 #rres .shine::before{content:"";position:absolute;top:0;bottom:0;width:14%;background:#fff;transform:translateX(-120%) skewX(-20deg);animation:sw 3s 2.2s steps(24) infinite;will-change:transform}
 @keyframes sw{0%{transform:translateX(-120%) skewX(-20deg)}60%,100%{transform:translateX(820%) skewX(-20deg)}}
-#rres a{position:absolute;left:18.75%;top:38.75%;width:62.5%;display:block;transition:transform .2s steps(3);opacity:0}
-#rres a img{display:block;width:100%;image-rendering:pixelated;filter:none}
-#rres a:hover,#rres a:focus-visible{transform:scale(1.07);outline:none}
-#rres a:hover img,#rres a:focus-visible img{filter:brightness(1.25)}
+#rres .tm a{position:absolute;left:18.75%;top:38.75%;width:62.5%;display:block;transition:transform .2s steps(3);opacity:0}
+#rres .tm a img{display:block;width:100%;image-rendering:pixelated;filter:none}
+#rres .tm a:hover,#rres .tm a:focus-visible{transform:scale(1.07);outline:none}
+#rres .tm a:hover img,#rres .tm a:focus-visible img{filter:brightness(1.25)}
 #casino.done #rres .colL{animation:rise .6s cubic-bezier(.2,.9,.3,1.05) forwards}
 #casino.done #rres .colR{animation:rise .6s .08s cubic-bezier(.2,.9,.3,1.05) forwards}
 #casino.done #rres .steps{animation:rise .45s cubic-bezier(.2,.9,.3,1) forwards}
 #casino.done #rres .ped{animation:drop .45s .62s cubic-bezier(.5,0,.75,1.25) forwards}
 #casino.done #rres .quartz{animation:cry .5s 1.05s steps(5) forwards}
 #casino.done #rres .sp,#casino.done #rres .shine{animation:fi .3s 1.15s steps(3) forwards}
-#casino.done #rres a{animation:fi .4s 1.3s steps(4) forwards}
+#casino.done #rres .tm a{animation:fi .4s 1.3s steps(4) forwards}
 #casino.done #rres .lbl,#casino.done #rres .after{animation:fi .4s 1.4s steps(4) forwards}
 #rres .lbl,#rres .after{opacity:0}
 @keyframes rise{from{transform:translateY(140vh)}to{transform:none}}
@@ -125,8 +125,8 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #rres .hint{margin-top:10px;font-size:clamp(9px,1vw,12px);color:#f4f4f4}
 #rres .hint span{animation:hb 1.2s steps(2) infinite}
 @keyframes hb{50%{opacity:.3}}
-#rres button{margin-top:12px;padding:10px 14px;border:0;box-shadow:0 0 0 3px #1a0c00,inset -3px -3px 0 #8a5600,inset 3px 3px 0 #fff3b0;background:#ffd44a;color:#1a0c00;font:12px "Press Start 2P",monospace;cursor:pointer}
-#rres button:hover{background:#ffe68a}#rres button:active{transform:translateY(2px)}
+#rres #ragain{display:inline-block;text-decoration:none;margin-top:12px;padding:10px 14px;border:0;box-shadow:0 0 0 3px #1a0c00,inset -3px -3px 0 #8a5600,inset 3px 3px 0 #fff3b0;background:#ffd44a;color:#1a0c00;font:12px "Press Start 2P",monospace;cursor:pointer}
+#rres #ragain:hover{background:#ffe68a}#rres #ragain:active{transform:translateY(2px)}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=VT323&family=Baloo+2:wght@800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700&family=Patrick+Hand&family=Press+Start+2P&display=swap">
@@ -382,9 +382,9 @@ function frame(ts){
   <div id="rres" aria-live="polite"><div class="lbl">You rolled</div>
     <div class="tm"><img class="steps" src="px/steps.png?v=e31dfc6a" alt=""><img class="colL" src="px/colL.png?v=52ccb189" alt=""><img class="colR" src="px/colR.png?v=2d2d8fe9" alt=""><img class="ped" src="px/ped.png?v=98b4a725" alt=""><img class="quartz" src="px/quartz.png?v=ebd9439c" alt=""><div class="shine"></div><div class="sp" aria-hidden="true"><b style="left:38%;top:83%;animation-delay:0.4s"></b><b style="left:90%;top:28%;animation-delay:1.0s"></b><b style="left:90%;top:33%;animation-delay:1.1s"></b><b style="left:96%;top:74%;animation-delay:1.5s"></b><b style="left:71%;top:27%;animation-delay:0.7s"></b><b style="left:28%;top:45%;animation-delay:0.4s"></b><b style="left:94%;top:28%;animation-delay:0.5s"></b><b style="left:11%;top:57%;animation-delay:0.5s"></b><b style="left:24%;top:54%;animation-delay:1.3s"></b><b style="left:89%;top:80%;animation-delay:1.6s"></b><b style="left:11%;top:83%;animation-delay:0.5s"></b><b style="left:7%;top:83%;animation-delay:0.6s"></b><b style="left:91%;top:85%;animation-delay:0.9s"></b><b style="left:40%;top:79%;animation-delay:0.2s"></b></div>
     <a href="https://rainbowroar14.github.io/RNG/" target="_blank" rel="noopener" aria-label="Test Your Luck"><img src="px/title.png?v=03a770d5" alt="Test Your Luck"></a></div>
-    <div class="after"><div class="odds">1/∞</div><div class="hint"><span>click to play</span></div><button type="button" id="ragain">roll again</button></div></div>
+    <div class="after"><div class="odds">1/∞</div><div class="hint"><span>click to play</span></div><a id="ragain" href="https://rainbowroar14.github.io/RNG/" target="_blank" rel="noopener">roll again</a></div></div>
 </section>
-<script src="casino.js?v=2dbfeb40"></script>
+<script src="casino.js?v=91c43599"></script>
 <script src="sticky.js?v=e4b5ada3"></script>
 
 </body>

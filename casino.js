@@ -34,6 +34,6 @@ function hook(dt){
       parts=[...Array(110)].map((_,i)=>({a:Math.random()*6.283,r:Math.max(W,H)*(.35+Math.random()*.5),v:.3+Math.random()*.8,s:1+(Math.random()*2|0),c:i%3?'#ffc440':(i%2?'#2de65f':'#fff')}));}}}
   else if(state===2){cs+=Math.min(dt,.05);if(cs>.25)sec.classList.add('reveal');fx(cs-.25);if(cs>1.6&&!sec.classList.contains('done')){sec.classList.add('done');}
     if(cs>2.6){g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);sec.classList.remove('dark');state=3;}}}
-document.getElementById('ragain').addEventListener('click',start);
+
 (window.FFC_HOOKS=window.FFC_HOOKS||[]).push(hook);addEventListener('resize',size);
 })();
