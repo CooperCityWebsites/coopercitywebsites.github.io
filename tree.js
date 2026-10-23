@@ -49,7 +49,7 @@ function makeGust(){const gg={t0:t,dir:Math.random()<.6?1:-1,s:.45+Math.random()
 const windNow=()=>gust?gust.wind(t-gust.t0):windBase;
 function layout(){
   const r=sec.getBoundingClientRect();PX=r.width<600?3:Math.max(3,Math.round(r.height/120));W=Math.ceil(r.width/PX);H=Math.ceil(r.height/PX);cv.width=W;cv.height=H;
-  sec.style.setProperty('--tpx',PX+'px');document.getElementById('tgnd').style.height=(32*PX)+'px';{const tm=document.getElementById('tmid'),gh=document.getElementById('tgnd').getBoundingClientRect().height,tb=r.height*.33+tm.offsetHeight*.44,avail=r.height-gh*.42-tb-16;
+  sec.style.setProperty('--tpx',PX+'px');sky.style.setProperty('--tpx',PX+'px');document.getElementById('tgnd').style.height=(32*PX)+'px';{const tm=document.getElementById('tmid'),gh=document.getElementById('tgnd').getBoundingClientRect().height,tb=r.height*.33+tm.offsetHeight*.44,avail=r.height-gh*.42-tb-16;
    const sw=Math.round(Math.max(96,Math.min(225,Math.max(135,r.width*.145),avail*64/85)));sec.style.setProperty('--sw',sw+'px');}GY=H-16;sec.style.setProperty('--sb',Math.round(32*PX*.42)+'px');if(!ready)return;
   rnd=mulberry(20261023);leafCache.clear();trees=[];const mob=r.width<700;
   const spots=mob?[[.15,.3,1,0],[.85,.3,1,.3]]:[[.11,.24,1,0],[.89,.24,1,.25],[.27,.15,.7,.6],[.73,.15,.7,.85]];
@@ -102,7 +102,9 @@ function frame(dt){
 function blowLeaf(){const tr=trees[(Math.random()*trees.length)|0];if(!tr||!tr.fl.length||fall.length>30)return;const l=tr.fl[(Math.random()*tr.fl.length)|0];
   fall.push({x:tr.cx+l.x*tr.k,y:GY+l.y*tr.k,vx:0,vy:8+Math.random()*6,a:l.ang,va:(Math.random()-.5)*4,c:l.pre,life:3});}
 function visible(){const r=sec.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;}
-function hook(dt){if(!ready||!visible())return;if(!trees.length)layout();
+const sky=document.getElementById('tsky');let skyIdle=null;
+function hook(dt){{const r=sky.getBoundingClientRect(),on=r.bottom>0&&r.top<innerHeight;if(on!==skyIdle){skyIdle=on;sky.classList.toggle('idle',!on);}}
+  if(!ready||!visible())return;if(!trees.length)layout();
   if(!started){const r=sec.getBoundingClientRect();if(r.top<innerHeight*.6){started=true;gt=0;sec.classList.add('on');nextGust=t+Math.max(...trees.map(x=>x.end))+1;}}
   frame(Math.min(dt,.05));}
 Promise.all([Promise.all(STICKS.map(load)),Promise.all(LEAVES.map(load))]).then(([st,lv])=>{

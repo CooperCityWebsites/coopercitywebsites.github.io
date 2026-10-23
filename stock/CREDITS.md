@@ -22,3 +22,8 @@ Ground strip:
 - mud blend in the soil: [File:Ground_with_stones.jpg](https://commons.wikimedia.org/wiki/File:Ground_with_stones.jpg), Titus Tscharntke, Public domain
 - individual pebbles cut out (ground): [File:Small_stones.jpg](https://commons.wikimedia.org/wiki/File:Small_stones.jpg), Titus Tscharntke, Public domain
 - grass tufts (blade masks over the photo): [File:Buffalo_grass_texture.jpg](https://commons.wikimedia.org/wiki/File:Buffalo_grass_texture.jpg), Titus Tscharntke, Public domain
+
+Clouds (cut out with make_clouds.py, then pixelated: stock/cloud_1-7.png):
+- [File:Cumulus Cloud.jpg](https://commons.wikimedia.org/wiki/File:Cumulus_Cloud.jpg), Hoodedwarbler12 (talk), Public domain
+- [File:Bright blue sky with scenic white cloud patterns.jpg](https://commons.wikimedia.org/wiki/File:Bright_blue_sky_with_scenic_white_cloud_patterns.jpg), Trixia Lao, CC0
+- [File:Cumulus cloud -2025.jpg](https://commons.wikimedia.org/wiki/File:Cumulus_cloud_-2025.jpg), Ani Vincent, CC0
