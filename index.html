@@ -7,7 +7,7 @@
 <link rel="icon" href="data:,">
 <style>
 html,body{margin:0;background:#07060d;overflow-x:hidden}
-body{height:440vh}
+body{height:460vh}
 #hint{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);color:#fff;font:500 13px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.12em;text-transform:lowercase;text-align:center;opacity:0;transition:opacity .6s ease;pointer-events:none;user-select:none}
 #hint svg{display:block;margin:6px auto 0;animation:bob 1.6s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
@@ -50,10 +50,10 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 .clickhint{position:absolute;left:50%;transform:translateX(-50%);bottom:24%;color:#fff;font:600 12px/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:lowercase;text-shadow:0 1px 3px rgba(0,0,0,.6);opacity:.8;animation:hp 1.6s ease-in-out infinite;pointer-events:none}
 @keyframes hp{0%,100%{opacity:.35}50%{opacity:.9}}
 
-#sticky{position:absolute;left:0;top:290vh;width:100%;height:max(110vh,660px);overflow:hidden;z-index:1;font-family:"Patrick Hand",cursive}
+#sticky{position:absolute;left:0;top:290vh;width:100%;height:max(130vh,820px);overflow:hidden;z-index:1;font-family:"Patrick Hand",cursive}
 #sboard{position:absolute;inset:0;background-color:#fff;background-image:radial-gradient(#e7e5e4 1.3px,transparent 1.3px);background-size:28px 28px;opacity:0;transition:opacity .25s}
 
-#splat{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;image-rendering:auto}
+#splat,#splatd{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;image-rendering:auto;transform:scale(0);transform-origin:50% 50%;will-change:transform}
 #sword{position:absolute;inset:0;z-index:4;pointer-events:none}
 .lnote{position:absolute;left:0;top:0;width:var(--ns,80px);height:var(--ns,80px);display:grid;place-items:center;font-size:calc(var(--ns,80px)*.68);line-height:1;color:#1c1917;border-radius:3px;box-shadow:0 1px 0 rgba(28,25,23,.05),0 10px 22px rgba(0,0,0,.28);opacity:0;will-change:transform}
 .mouse{position:absolute;left:0;top:0;z-index:5;pointer-events:none;opacity:0;will-change:transform;transform-origin:0 0}
@@ -62,7 +62,7 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 #sextras{position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none}
 #sticky.done #sextras{opacity:1;pointer-events:auto}
 #sextras>*{position:absolute;transform:translate(-50%,-50%) rotate(var(--r)) scale(.3);transition:transform .6s cubic-bezier(.3,1.6,.5,1),opacity .3s;opacity:0}
-#sticky.done #sextras>*{transform:translate(-50%,-50%) rotate(var(--r)) scale(1);opacity:1}
+#sticky.done #sextras>*{transform:translate(-50%,-50%) rotate(var(--r)) scale(var(--es,1));opacity:1}
 #sticky.done #sextras>*:nth-child(2){transition-delay:.08s}#sticky.done #sextras>*:nth-child(3){transition-delay:.16s}#sticky.done #sextras>*:nth-child(4){transition-delay:.24s}#sticky.done #sextras>*:nth-child(5){transition-delay:.32s}#sticky.done #sextras>*:nth-child(6){transition-delay:.4s}#sticky.done #sextras>*:nth-child(7){transition-delay:.48s}#sticky.done #sextras>*:nth-child(8){transition-delay:.56s}
 .meme{width:clamp(70px,11vw,140px);filter:drop-shadow(0 8px 14px rgba(28,25,23,.25))}
 .tnote{width:clamp(130px,17vw,200px);padding:12px 14px 14px;border-radius:3px;color:#1c1917;font-size:clamp(17px,1.8vw,22px);line-height:1.2;box-shadow:0 1px 0 rgba(28,25,23,.05),0 14px 30px rgba(28,25,23,.16)}
@@ -310,7 +310,7 @@ function frame(ts){
 <script src="scene.js?v=42fa01da"></script>
 <section id="sticky" aria-label="Sticky Board">
   
-  <canvas id="splat" aria-hidden="true"></canvas>
+  <canvas id="splat" aria-hidden="true"></canvas><canvas id="splatd" aria-hidden="true"></canvas>
   <div id="sextras">
     <img class="meme" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/maxwell.png" alt="maxwell" style="left:17%;top:30%;--r:-8deg">
     <img class="meme" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/doge.png" alt="doge" style="left:62%;top:74%;--r:7deg">
@@ -323,7 +323,7 @@ function frame(ts){
   </div>
   <div id="sword"></div>
 </section>
-<script src="sticky.js?v=7040a21d"></script>
+<script src="sticky.js?v=827e29ad"></script>
 
 </body>
 </html>
