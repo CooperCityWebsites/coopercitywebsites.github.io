@@ -99,8 +99,69 @@ function layoutExtras(){const es=Math.max(.45,Math.min(1,W/1100,H/950));extras.s
     const hw=el.offsetWidth*es/2+10,hh=el.offsetHeight*es/2+10;x=Math.max(hw,Math.min(W-hw,x));y=Math.max(hh,Math.min(H-hh,y));
     el.style.left=x+'px';el.style.top=y+'px';});}
 function resize(){const r=sec.getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(1.5,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;layoutExtras();}
-function finalState(){state=3;sec.classList.add('done');targets();resize();drawSplat(T_END,true);
+function finalState(){state=3;sec.classList.add('done');targets();resize();drawSplat(T_END,true);buildDoodles();dragIn(0,true);doodle(0,true);
   items.forEach(it=>{place(it,it.tx,it.ty,+it.n.dataset.tilt,1);it.n.style.opacity=1;mouse(it,0,0,0,false);});}
+// ---- phase 3: mice drag each meme/note in by a corner (swing, squash drop, tape slap), then a marker-mouse doodles on the board
+[...extras.querySelectorAll(':scope>img')].forEach(img=>{const w=document.createElement('div');w.className='memew'+(img.classList.contains('hide-sm')?' hide-sm':'');
+  w.setAttribute('style',img.getAttribute('style'));w.dataset.alt=img.alt;img.removeAttribute('style');img.classList.remove('hide-sm');img.replaceWith(w);w.append(img);});
+const EX=[...extras.children];
+EX.forEach((el,k)=>{const tp=document.createElement('i');tp.className='tape';tp.style.setProperty('--tr',(rr(-14,14)).toFixed(1)+'deg');el.append(tp);
+  const m=document.createElement('div');m.className='mouse';m.innerHTML='<span class="mc"></span><span class="mn">'+NAMES[(k+4)%NAMES.length]+'</span>';sec.append(m);
+  el._d={m,s:rr(0,2.4),dur:rr(.9,1.4),ang:rr(0,6.283),far:rr(.6,1),cx:RNG()<.5?-1:1,sw:rr(5,10)};});
+EX.sort((a,b)=>a._d.s-b._d.s);
+const DOODLE_T0=1.2,MARK=document.createElement('div');MARK.className='mouse marker';MARK.innerHTML='<span class="mc"></span><span class="pen"></span><span class="mn">Finley</span>';sec.append(MARK);
+const SVGN='http://www.w3.org/2000/svg',svg=document.getElementById('doodle');let strokes=[],DT_END=0;
+const jit=()=>rr(-1.6,1.6);
+function buildDoodles(){svg.innerHTML='';strokes=[];svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const S=Math.max(.55,Math.min(1.1,Math.min(W,H)/850)),P=(x,y)=>[W/2+x*RX(),H/2+y*RY()];
+  const add=(d,w=4.2)=>{const p=document.createElementNS(SVGN,'path');p.setAttribute('d',d);p.setAttribute('stroke-width',w*S);svg.append(p);strokes.push({p,L:0});};
+  const circ=(cx,cy,r,turn=1.08)=>{let d='';const n=26;for(let i=0;i<=n*turn;i++){const a=-1.9+i/n*6.283,rr_=r*(1+.04*Math.sin(i*1.7));d+=(i?'L':'M')+(cx+Math.cos(a)*rr_+jit()*.4).toFixed(1)+' '+(cy+Math.sin(a)*rr_+jit()*.4).toFixed(1);}return d;};
+  const W_=W<600;
+  // smiley
+  {const [x,y]=P(W_?.28:-.08,W_?-.2:-.4),r=34*S;add(circ(x,y,r));add(`M${x-12*S} ${y-9*S}l${1*S} ${7*S}`);add(`M${x+12*S} ${y-9*S}l${1*S} ${7*S}`);
+   add(`M${x-18*S} ${y+8*S}Q${x} ${y+28*S} ${x+19*S} ${y+6*S}`);}
+  // arrows pointing at memes (cat + doge)
+  const arrow=(from,to)=>{const [x0,y0]=from,[x1,y1]=to,mx=(x0+x1)/2+(y1-y0)*.25,my=(y0+y1)/2-(x1-x0)*.25;add(`M${x0} ${y0}Q${mx} ${my} ${x1} ${y1}`);
+    const a=Math.atan2(y1-my,x1-mx),h=16*S;add(`M${x1-Math.cos(a-.5)*h} ${y1-Math.sin(a-.5)*h}L${x1} ${y1}L${x1-Math.cos(a+.5)*h} ${y1-Math.sin(a+.5)*h}`);};
+  const at=(el,dx,dy)=>[parseFloat(el.style.left)+dx,parseFloat(el.style.top)+dy];
+  const cat=EX.find(e=>e.dataset.alt==='maxwell'),doge=EX.find(e=>e.dataset.alt==='doge');
+  if(cat){const t=at(cat,cat.offsetWidth*.32,-cat.offsetHeight*.1);arrow([t[0]+110*S,t[1]-70*S],t);}
+  if(doge){const t=at(doge,doge.offsetWidth*.3,-doge.offsetHeight*.3);arrow([t[0]+120*S,t[1]-75*S],t);}
+  // heart
+  {const [x,y]=P(W_?-.3:-.22,W_?.3:.42),s=22*S;add(`M${x} ${y+s*1.1}C${x-s*2.2} ${y-s*.2} ${x-s*1.1} ${y-s*1.7} ${x} ${y-s*.5}C${x+s*1.1} ${y-s*1.7} ${x+s*2.2} ${y-s*.2} ${x+jit()} ${y+s*1.1}`);}
+  // star
+  {const [x,y]=P(W_?.3:.36,W_?-.5:-.2),r=26*S;let d='';for(let i=0;i<=5;i++){const a=-Math.PI/2+i*4*Math.PI/5;d+=(i?'L':'M')+(x+Math.cos(a)*r+jit()).toFixed(1)+' '+(y+Math.sin(a)*r+jit()).toFixed(1);}add(d);}
+  // 'lol!' scribble
+  {const [x,y]=P(W_?.05:.26,W_?.3:.36),s=S;add(`M${x} ${y-26*s}Q${x-3*s} ${y-6*s} ${x+2*s} ${y+6*s}`,4.6);add(circ(x+20*s,y-2*s,9*s,1.05),4.6);
+   add(`M${x+40*s} ${y-28*s}Q${x+37*s} ${y-6*s} ${x+43*s} ${y+6*s}`,4.6);add(`M${x+56*s} ${y-28*s}L${x+54*s} ${y-6*s}`,4.6);add(`M${x+53*s} ${y+3*s}l${1*s} ${1.5*s}`,6);
+   add(`M${x-6*s} ${y+16*s}Q${x+30*s} ${y+24*s} ${x+66*s} ${y+13*s}`,3.4);}
+  let tt=DOODLE_T0;for(const s of strokes){s.L=s.p.getTotalLength();s.p.style.strokeDasharray=s.L+' '+(s.L+2);s.p.style.strokeDashoffset=s.L;
+    s.t0=tt+.18;s.t1=s.t0+Math.max(.12,s.L/520);tt=s.t1;}DT_END=tt+.6;}
+let lastTip=null;
+function doodle(u,final){ // u = seconds since the drag phase started
+  for(const s of strokes){const k=final?1:clamp((u-s.t0)/(s.t1-s.t0));s.p.style.strokeDashoffset=(s.L*(1-k)).toFixed(1);}
+  if(final){MARK.style.opacity=0;return;}
+  const cur=strokes.find(s=>u<s.t1)||null;let x,y;
+  if(!cur){const e=clamp((u-DT_END+.6)/.6),p=lastTip||[W,H];x=p[0]+e*e*W*.6;y=p[1]+e*e*H*.3;MARK.style.opacity=e<1?1:0;}
+  else if(u<cur.t0){const prev=strokes[strokes.indexOf(cur)-1],a=prev?prev.p.getPointAtLength(prev.L):{x:W*1.1,y:H*.2},b=cur.p.getPointAtLength(0),e=smooth3((u-(prev?prev.t1:DOODLE_T0-.8))/(cur.t0-(prev?prev.t1:DOODLE_T0-.8)));x=a.x+(b.x-a.x)*e;y=a.y+(b.y-a.y)*e;MARK.style.opacity=1;}
+  else{const q=cur.p.getPointAtLength(cur.L*clamp((u-cur.t0)/(cur.t1-cur.t0)));x=q.x;y=q.y;MARK.style.opacity=1;}
+  lastTip=[x,y];MARK.style.transform=`translate(${x-26}px,${y-26}px) scale(1.4)`;}
+function dragIn(u,final){ // drag each extra in from off-screen
+  const es=+extras.style.getPropertyValue('--es')||1;
+  for(const el of EX){const d=el._d,k=final?9:u-d.s,r0=parseFloat(el.style.getPropertyValue('--r'))||0,hw=el.offsetWidth*es/2,hh=el.offsetHeight*es/2;
+    if(k<0){el.style.opacity=0;d.m.style.opacity=0;continue;}el.style.opacity=1;
+    let dx=0,dy=0,rot=r0,sx=1,sy=1,mo=0;
+    if(k<d.dur){const e=ease(k/d.dur),far=Math.max(W,H)*d.far*(1-e);dx=Math.cos(d.ang)*far;dy=Math.sin(d.ang)*far;
+      const vx=-Math.cos(d.ang)*(1-e);rot=d.cx*d.sw+Math.sin(k*9)*4*(1-e)+vx*8;mo=1;}       // held by a corner: tilt + swing
+    else if(k<d.dur+.45){const s=(k-d.dur)/.45;rot=d.cx*d.sw*(1-smooth3(s*1.6))+r0*smooth3(s*1.6);  // drop: squash bounce + rotate to final tilt
+      const b=Math.exp(-6*s)*Math.sin(s*20);sx=1+.12*b;sy=1-.12*b;mo=s<.6?1:0;if(!el._taped&&s>.25){el._taped=1;el.classList.add('taped');}}
+    else{if(!el._taped){el._taped=1;el.classList.add('taped');}}
+    el.style.transform=`translate(-50%,-50%) translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) rotate(${rot.toFixed(2)}deg) scale(${(es*sx).toFixed(3)},${(es*sy).toFixed(3)})`;
+    if(mo){const c=(rot*Math.PI/180),ox=d.cx*hw*.85,oy=-hh*.85,mx=parseFloat(el.style.left)+dx+ox*Math.cos(c)-oy*Math.sin(c),my=parseFloat(el.style.top)+dy+ox*Math.sin(c)+oy*Math.cos(c);
+      d.m.style.opacity=1;d.m.style.transform=`translate(${mx-3}px,${my-3}px) scale(1.4)`;d.last=[mx,my];}
+    else if(d.last&&k<d.dur+1.2){const e=clamp((k-d.dur-.25)/.9);d.m.style.opacity=e<1?1:0;d.m.style.transform=`translate(${d.last[0]+Math.cos(d.ang)*W*e*e}px,${d.last[1]+Math.sin(d.ang)*H*e*e}px) scale(1.4)`;}
+    else d.m.style.opacity=0;}}
+const DRAG_END=()=>Math.max(...EX.map(e=>e._d.s+e._d.dur))+1.3;
 function visible(){const r=sec.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;}
 function hook(dt){
   if(state===3)return;
@@ -119,7 +180,8 @@ function hook(dt){
       else if(k<2.3){const e=ease(clamp((k-1.4)/.9)),x=it.tx+12+(it.ex-it.tx)*e,y=it.ty+8+(it.ey-it.ty)*e;place(it,it.tx,it.ty,tilt,1);mouse(it,x,y,Math.sin(k*34)*.15,e<1);if(e<1)done=false;}
       else mouse(it,0,0,0,false);}
     if(done){state=2;t=0;}}
-  else if(state===2){drawSplat(t);if(t>T_END-.4)sec.classList.add('done');if(t>T_END+1.6){finalState();}}
+  else if(state===2){if(t<T_END)drawSplat(t);else{drawSplat(T_END,true);sec.classList.add('done');state=4;t=0;buildDoodles();EX.forEach(e=>e.style.opacity=0);}}
+  else if(state===4){dragIn(t);doodle(t);if(t>Math.max(DRAG_END(),DT_END)){finalState();}}
 }
 build();
 (window.FFC_HOOKS=window.FFC_HOOKS||[]).push(hook);

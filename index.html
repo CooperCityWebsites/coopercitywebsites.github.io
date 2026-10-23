@@ -61,10 +61,10 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 .mn{position:absolute;left:20px;top:-6px;padding:2px 6px;border-radius:6px;background:#1c1917;color:#fffef8;font:600 12px Figtree,"Segoe UI",sans-serif;white-space:nowrap}
 #sextras{position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none}
 #sticky.done #sextras{opacity:1;pointer-events:auto}
-#sextras>*{position:absolute;transform:translate(-50%,-50%) rotate(var(--r)) scale(.3);transition:transform .6s cubic-bezier(.3,1.6,.5,1),opacity .3s;opacity:0}
-#sticky.done #sextras>*{transform:translate(-50%,-50%) rotate(var(--r)) scale(var(--es,1));opacity:1}
-#sticky.done #sextras>*:nth-child(2){transition-delay:.08s}#sticky.done #sextras>*:nth-child(3){transition-delay:.16s}#sticky.done #sextras>*:nth-child(4){transition-delay:.24s}#sticky.done #sextras>*:nth-child(5){transition-delay:.32s}#sticky.done #sextras>*:nth-child(6){transition-delay:.4s}#sticky.done #sextras>*:nth-child(7){transition-delay:.48s}#sticky.done #sextras>*:nth-child(8){transition-delay:.56s}
-.meme{width:clamp(70px,11vw,140px);filter:drop-shadow(0 8px 14px rgba(28,25,23,.25))}
+#sextras>*{position:absolute;transform:translate(-50%,-50%) rotate(var(--r)) scale(var(--es,1));opacity:0}
+
+
+.memew img{display:block}.meme{width:clamp(70px,11vw,140px);filter:drop-shadow(0 8px 14px rgba(28,25,23,.25))}
 .tnote{width:clamp(130px,17vw,200px);padding:12px 14px 14px;border-radius:3px;color:#1c1917;font-size:clamp(17px,1.8vw,22px);line-height:1.2;box-shadow:0 1px 0 rgba(28,25,23,.05),0 14px 30px rgba(28,25,23,.16)}
 #ttt{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0}
 #ttt button{aspect-ratio:1;border:0;border-radius:4px;background:rgba(255,255,255,.7);font:inherit;font-size:clamp(20px,2.4vw,30px);color:#1c1917;cursor:pointer;padding:0}
@@ -74,6 +74,12 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 a.sblink{display:block;text-decoration:none;cursor:pointer;text-align:center}
 a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8px;background:#1c1917;color:#fffef8;font:700 14px Figtree,sans-serif}
 @media (max-width:760px){.hide-sm{display:none}}
+#doodle{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;overflow:visible}
+#doodle path{fill:none;stroke:#1c1917;stroke-linecap:round;stroke-linejoin:round}
+#sextras{z-index:4}#sword{z-index:5}.mouse{z-index:6}
+.tape{position:absolute;left:50%;top:-12px;width:64px;height:20px;margin-left:-32px;background:rgba(255,236,170,.78);box-shadow:0 1px 2px rgba(0,0,0,.15);transform:rotate(var(--tr)) scale(1.8);opacity:0;transition:transform .22s cubic-bezier(.3,1.8,.5,1),opacity .12s;pointer-events:none;clip-path:polygon(0 8%,4% 0,8% 10%,12% 0,100% 0,96% 12%,100% 24%,96% 50%,100% 76%,96% 90%,100% 100%,0 100%,4% 85%,0 70%,4% 50%,0 30%)}
+.taped .tape{opacity:1;transform:rotate(var(--tr)) scale(1)}
+.marker .pen{position:absolute;left:8px;top:8px;width:7px;height:34px;border-radius:3px 3px 1px 1px;background:linear-gradient(#1c1917 0 18%,#e11d48 18% 82%,#1c1917 82%);transform:rotate(-35deg);transform-origin:50% 0}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=VT323&family=Baloo+2:wght@800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700&family=Patrick+Hand&display=swap">
@@ -311,7 +317,7 @@ function frame(ts){
 <section id="sticky" aria-label="Sticky Board">
   
   <canvas id="splat" aria-hidden="true"></canvas>
-  <div id="sextras">
+  <svg id="doodle" aria-hidden="true"></svg><div id="sextras">
     <img class="meme" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/maxwell.png" alt="maxwell" style="left:17%;top:30%;--r:-8deg">
     <img class="meme" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/doge.png" alt="doge" style="left:62%;top:74%;--r:7deg">
     <img class="meme hide-sm" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/cheems.png" alt="cheems" style="left:37%;top:74%;--r:5deg">
@@ -323,7 +329,7 @@ function frame(ts){
   </div>
   <div id="sword"></div>
 </section>
-<script src="sticky.js?v=a342d99e"></script>
+<script src="sticky.js?v=d354732a"></script>
 
 </body>
 </html>
