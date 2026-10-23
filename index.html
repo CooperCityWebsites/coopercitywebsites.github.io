@@ -6,12 +6,17 @@
 <title>FFC</title>
 <link rel="icon" href="data:,">
 <style>
-html,body{margin:0;height:100%;background:#07060d;overflow:hidden}
+html,body{margin:0;background:#07060d;overflow-x:hidden}
+body{height:400vh}
+#hint{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);color:#fff;font:500 13px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.12em;text-transform:lowercase;text-align:center;opacity:0;transition:opacity .6s ease;pointer-events:none;user-select:none}
+#hint svg{display:block;margin:6px auto 0;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
 canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 </style>
 </head>
 <body>
 <canvas id="c" aria-label="FFC"></canvas>
+<div id="hint">scroll down<svg width="14" height="9" viewBox="0 0 14 9"><path d="M1 1l6 6 6-6" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
 <script>
 (()=>{
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -25,6 +30,7 @@ const T_LET=2.2, T_FLASH1=2.25, T_FAN=2.55, T_EDGE=2.75, D_EDGE=1.7, T_BR=4.6, D
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const easeOutQuint=t=>1-Math.pow(1-t,5), easeOutBack=t=>{const c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);};
 const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, easeOutCubic=t=>1-Math.pow(1-t,3);
+let baseOy=0,hintEl=document.getElementById('hint'),scrolled=false;
 let letters=[],chunks=[],others=[],logoC,logoX,logoD,buf,full;
 function resize(){
   const lwv=lw||720,lhv=lh||300;
@@ -33,7 +39,7 @@ function resize(){
   W=Math.ceil(innerWidth/PX);H=Math.ceil(innerHeight/PX);cv.width=W;cv.height=H;
   const n=Math.round(W*H/120*Math.min(1,PX*PX/4));stars=[];
   for(let i=0;i<n;i++)stars.push({x:Math.random()*W,y:Math.random()*H,p:Math.random()*6.28,s:.6+Math.random()*2,v:.3+Math.random()*1.5,big:Math.random()<.06});
-  ox=Math.round((W-lw)/2);oy=Math.round((H-lh)/2);
+  ox=Math.round((W-lw)/2);baseOy=Math.round((H-lh)/2);oy=baseOy;
 }
 addEventListener('resize',resize);
 function load(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
@@ -132,11 +138,13 @@ function frame(ts){
   if(last===null)last=ts;let dt=(ts-last)/1000;last=ts;dt=Math.min(Math.max(dt,0),1/20);
   if(!ready){requestAnimationFrame(frame);return;}
   time+=dt;
+  const sc=scrollY/PX; oy=baseOy-Math.round(sc); if(scrollY>20)scrolled=true;
+  hintEl.style.opacity=(time>T_FIN+1&&!scrolled&&scrollY<20)?'0.85':'0';
   ctx.globalAlpha=1;ctx.fillStyle='#07060d';ctx.fillRect(0,0,W,H);
   for(const s of stars){
     s.x-=s.v*dt;if(s.x<0)s.x+=W;
     const b=.5+.5*Math.sin(s.p+time*s.s),l=Math.round(80+175*b);ctx.fillStyle=`rgb(${l},${l},${Math.min(255,l+30)})`;
-    const x=s.x|0,y=s.y|0,ss=PX<2?2:1;ctx.fillRect(x,y,ss,ss);
+    const x=s.x|0,y=(((s.y-sc*.35)%H)+H)%H|0,ss=PX<2?2:1;ctx.fillRect(x,y,ss,ss);
     if(s.big&&b>.7){ctx.fillStyle=`rgba(150,160,220,${(b-.5)*1.5})`;ctx.fillRect(x-1,y,1,1);ctx.fillRect(x+1,y,1,1);ctx.fillRect(x,y-1,1,1);ctx.fillRect(x,y+1,1,1);}
   }
   nextShoot-=dt;if(nextShoot<=0){spawnShoot();nextShoot=3+Math.random()*5;}
