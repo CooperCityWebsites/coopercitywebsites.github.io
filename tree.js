@@ -102,8 +102,12 @@ function frame(dt){
 function blowLeaf(){const tr=trees[(Math.random()*trees.length)|0];if(!tr||!tr.fl.length||fall.length>30)return;const l=tr.fl[(Math.random()*tr.fl.length)|0];
   fall.push({x:tr.cx+l.x*tr.k,y:GY+l.y*tr.k,vx:0,vy:8+Math.random()*6,a:l.ang,va:(Math.random()-.5)*4,c:l.pre,life:3});}
 function visible(){const r=sec.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;}
-const sky=document.getElementById('tsky');let skyIdle=null;
-function hook(dt){{const r=sky.getBoundingClientRect(),on=r.bottom>0&&r.top<innerHeight;if(on!==skyIdle){skyIdle=on;sky.classList.toggle('idle',!on);}}
+const sky=document.getElementById('tsky'),cla=document.getElementById('cla'),clb=document.getElementById('clb');let skyIdle=null;
+// Sky parallax like the fixed star field: it lags the page (moves at ~half speed); clouds lag a little less, per layer, for depth.
+const KS=.5,KA=.42,KB=.32;
+function skyPar(){const tr=sec.getBoundingClientRect(),c=innerHeight/2-tr.height/2,d=Math.max(-innerHeight,Math.min(innerHeight,c-tr.top));
+  sky.style.transform=`translate3d(0,${(d*KS).toFixed(1)}px,0)`;cla.style.transform=`translate3d(0,${(d*(KA-KS)).toFixed(1)}px,0)`;clb.style.transform=`translate3d(0,${(d*(KB-KS)).toFixed(1)}px,0)`;}
+function hook(dt){{const r=sky.getBoundingClientRect(),on=r.bottom>0&&r.top<innerHeight;if(on!==skyIdle){skyIdle=on;sky.classList.toggle('idle',!on);}if(on||Math.abs(sec.getBoundingClientRect().top)<innerHeight*2)skyPar();}
   if(!ready||!visible())return;if(!trees.length)layout();
   if(!started){const r=sec.getBoundingClientRect();if(r.top<innerHeight*.6){started=true;gt=0;sec.classList.add('on');nextGust=t+Math.max(...trees.map(x=>x.end))+1;}}
   frame(Math.min(dt,.05));}

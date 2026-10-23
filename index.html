@@ -144,9 +144,10 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #gh a:hover,#gh a:focus-visible{background:rgba(255,196,110,.32);color:#fff;outline:none}
 #gh:hover .t{color:rgba(60,30,8,.9)}
 #tmid h2{margin:0;line-height:0}#tmid h2 img{width:min(100%,720px);height:auto;image-rendering:pixelated;filter:drop-shadow(0 0 2px #000) drop-shadow(3px 4px 0 rgba(0,0,0,.55))}
-#tsky{position:absolute;left:0;width:100%;top:calc(400vh + max(100vh,560px) + 40px);height:calc(440px + max(74vh,500px));z-index:1;overflow:hidden;pointer-events:none;
- background:linear-gradient(to bottom,rgba(6,7,14,0) 0,rgba(10,16,40,.75) 120px,#173a78 260px,#2c66b8 400px,#4f95dc 560px,#9fd2f5 100%)}
+#tsky{position:absolute;left:0;width:100%;top:calc(400vh + max(100vh,560px) + 40px);height:calc(1140px + max(74vh,500px));z-index:1;overflow-x:clip;overflow-y:visible;pointer-events:none;will-change:transform;
+ background:linear-gradient(to bottom,rgba(6,7,14,0) 0,rgba(10,16,40,.75) 120px,#173a78 260px,#2c66b8 400px,#4f95dc 560px,#9fd2f5 calc(100% - 700px),#9fd2f5 100%)}
 #tsky img{position:absolute;left:0;width:calc(var(--w) * var(--tpx,4px));image-rendering:pixelated;will-change:transform;animation:cdrift var(--d) linear infinite;animation-delay:var(--dl)}
+#tsky .cl{position:absolute;inset:0;will-change:transform}
 #tsky.idle img{animation-play-state:paused}
 @keyframes cdrift{from{transform:translateX(-30vw)}to{transform:translateX(110vw)}}
 #under{position:absolute;left:0;width:100%;top:calc(400vh + max(100vh,560px) + 480px + max(74vh,500px));height:max(220vh,1500px);z-index:1;overflow:hidden;background:#0d0a1a url(stock/strata.png?v=5b131005) 50% 0/auto 100% repeat-x;image-rendering:pixelated}
@@ -442,7 +443,7 @@ function frame(ts){
     <a href="https://rainbowroar14.github.io/RNG/" target="_blank" rel="noopener" aria-label="Test Your Luck"><img src="px/title.png?v=03a770d5" alt="Test Your Luck"></a></div>
     <div class="after"><div class="odds">1/∞</div><div class="hint"><span>click to play</span></div><a id="ragain" href="https://rainbowroar14.github.io/RNG/" target="_blank" rel="noopener">roll again</a></div></div>
 </section>
-<div id="tsky" aria-hidden="true"><img src="stock/cloud_1.png?v=81d6511d" alt="" style="--w:40;--d:179s;--dl:-142s;top:353px;opacity:0.75"><img src="stock/cloud_2.png?v=e61607f4" alt="" style="--w:95;--d:214s;--dl:-197s;top:504px;opacity:0.95"><img src="stock/cloud_3.png?v=9917c8f1" alt="" style="--w:95;--d:113s;--dl:-107s;top:402px;opacity:0.95"><img src="stock/cloud_4.png?v=67fd9bed" alt="" style="--w:47;--d:181s;--dl:-21s;top:563px;opacity:0.95"><img src="stock/cloud_5.png?v=75cf1abe" alt="" style="--w:50;--d:162s;--dl:-88s;top:321px;opacity:0.95"><img src="stock/cloud_6.png?v=37ea009a" alt="" style="--w:40;--d:173s;--dl:-38s;top:163px;opacity:0.75"><img src="stock/cloud_7.png?v=ce010dd3" alt="" style="--w:40;--d:141s;--dl:-108s;top:398px;opacity:0.75"><img src="stock/cloud_2.png?v=e61607f4" alt="" style="--w:95;--d:128s;--dl:-18s;top:525px;opacity:0.95"><img src="stock/cloud_4.png?v=67fd9bed" alt="" style="--w:47;--d:178s;--dl:-0s;top:277px;opacity:0.95"><img src="stock/cloud_1.png?v=81d6511d" alt="" style="--w:40;--d:206s;--dl:-44s;top:214px;opacity:0.75"></div>
+<div id="tsky" aria-hidden="true"><div class="cl" id="cla"><img src="stock/cloud_1.png?v=81d6511d" alt="" style="--w:40;--d:179s;--dl:-142s;top:353px;opacity:0.75"><img src="stock/cloud_3.png?v=9917c8f1" alt="" style="--w:95;--d:113s;--dl:-107s;top:402px;opacity:0.95"><img src="stock/cloud_5.png?v=75cf1abe" alt="" style="--w:50;--d:162s;--dl:-88s;top:321px;opacity:0.95"><img src="stock/cloud_7.png?v=ce010dd3" alt="" style="--w:40;--d:141s;--dl:-108s;top:398px;opacity:0.75"><img src="stock/cloud_4.png?v=67fd9bed" alt="" style="--w:47;--d:178s;--dl:-0s;top:277px;opacity:0.95"></div><div class="cl" id="clb"><img src="stock/cloud_2.png?v=e61607f4" alt="" style="--w:95;--d:214s;--dl:-197s;top:504px;opacity:0.95"><img src="stock/cloud_4.png?v=67fd9bed" alt="" style="--w:47;--d:181s;--dl:-21s;top:563px;opacity:0.95"><img src="stock/cloud_6.png?v=37ea009a" alt="" style="--w:40;--d:173s;--dl:-38s;top:163px;opacity:0.75"><img src="stock/cloud_2.png?v=e61607f4" alt="" style="--w:95;--d:128s;--dl:-18s;top:525px;opacity:0.95"><img src="stock/cloud_1.png?v=81d6511d" alt="" style="--w:40;--d:206s;--dl:-44s;top:214px;opacity:0.75"></div></div>
 <section id="tree" aria-label="Touch Grass"><canvas id="tcv" aria-hidden="true"></canvas><div id="tgnd" aria-hidden="true"></div>
   <div id="tmid"><h2><picture><source media="(max-width:600px)" srcset="stock/title-2line.png?v=77e878b9"><img src="stock/title-1line.png?v=8980d976" alt="Touch Grass"></picture></h2><p>grow trees, set them on fire, make it rain</p><a href="https://rainbowroar14.github.io/Tree/" target="_blank" rel="noopener">open</a></div>
   <div id="gh"><img src="sprout/sign.png?v=970cd4ed" alt=""><div class="board"><div class="t"><i></i>GitHub</div><a href="https://github.com/rainbowroar14" target="_blank" rel="noopener">rainbowroar14</a></div></div></section>
@@ -454,7 +455,7 @@ function frame(ts){
   <canvas id="uwall" aria-hidden="true"></canvas></section>
 <div id="udepth" aria-hidden="true">▼ 0 m</div>
 <script src="under.js?v=1429717f"></script>
-<script src="tree.js?v=027460df"></script>
+<script src="tree.js?v=33743d15"></script>
 <script src="casino.js?v=91c43599"></script>
 <script src="sticky.js?v=e4b5ada3"></script>
 
