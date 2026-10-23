@@ -131,16 +131,13 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #rres #ragain:hover{background:#ffe68a}#rres #ragain:active{transform:translateY(2px)}
 #tree{position:absolute;left:0;top:calc(400vh + max(100vh,560px));width:100%;height:max(65vh,420px);overflow:hidden;z-index:1;background:linear-gradient(rgba(13,20,16,0),#0d1410 22%,#14201a);font-family:"Press Start 2P",monospace;color:#fff;
 }
-#gh{position:absolute;left:50%;bottom:calc(6 * var(--tpx,4px));transform:translateX(-50%);width:clamp(150px,16vw,210px);height:clamp(118px,24%,170px);z-index:2;opacity:0;transition:opacity .6s 2.2s}
+#gh{position:absolute;left:50%;bottom:calc(5 * var(--tpx,4px) - 2px);width:clamp(120px,13vw,190px);aspect-ratio:64/85;margin-left:calc(clamp(120px,13vw,190px) / -2);z-index:2;opacity:0;transition:opacity .6s 2.4s;transform-origin:50% 100%;will-change:transform}
 #tree.on #gh{opacity:1}
-#gh .post{position:absolute;left:8px;bottom:0;top:0;width:10px;background:#6b4426;box-shadow:inset 3px 0 0 #9a6a3e,0 0 0 2px #000}
-#gh .arm{position:absolute;left:8px;right:6px;top:0;height:9px;background:#6b4426;box-shadow:inset 0 3px 0 #9a6a3e,0 0 0 2px #000}
-#gh .sign{position:absolute;left:24px;right:0;top:9px;transform-origin:50% 0;will-change:transform}
-#gh .rope{position:absolute;top:0;width:3px;height:14px;background:#d8c08a;box-shadow:0 0 0 1px #000}#gh .rope.a{left:16%}#gh .rope.b{right:16%}
-#gh .board{margin-top:14px;padding:10px 6px 9px;background:repeating-linear-gradient(#a8703e 0 9px,#8f5a32 9px 11px);box-shadow:0 0 0 3px #3b2210,0 0 0 5px #000,inset 3px 3px 0 #c88d52;text-align:center}
-#gh .t{display:flex;align-items:center;justify-content:center;gap:7px;font-size:clamp(10px,1.1vw,14px);color:#fff;text-shadow:2px 2px 0 #000}
-#gh .t i{width:14px;height:14px;background:#fff;box-shadow:2px 2px 0 #000;clip-path:polygon(15% 0,35% 15%,65% 15%,85% 0,100% 30%,100% 70%,65% 100%,65% 80%,35% 80%,35% 100%,0 70%,0 30%)}
-#gh a{display:inline-block;margin-top:9px;padding:7px 6px;background:#141414;color:#fff;text-decoration:none;font-size:clamp(7px,.72vw,9px);box-shadow:0 0 0 2px #000,inset -2px -2px 0 #000,inset 2px 2px 0 #555}
+#gh img{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none}
+#gh .board{position:absolute;left:6%;right:6%;top:6%;height:36%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6%}
+#gh .t{display:flex;align-items:center;gap:6px;font-size:clamp(9px,1vw,14px);color:#fff4d6;text-shadow:2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000,2px 2px 0 #000}
+#gh .t i{width:12px;height:12px;background:#fff4d6;box-shadow:2px 2px 0 #000;clip-path:polygon(15% 0,35% 15%,65% 15%,85% 0,100% 30%,100% 70%,65% 100%,65% 80%,35% 80%,35% 100%,0 70%,0 30%)}
+#gh a{display:inline-block;padding:5px 5px;background:#1b120a;color:#fff4d6;text-decoration:none;font-size:clamp(6px,.62vw,9px);box-shadow:0 0 0 2px #000,inset 2px 2px 0 #4a3523}
 #gh a:hover,#gh a:focus-visible{background:#2de65f;color:#000;outline:none}
 #tcv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
 #tmid{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);text-align:center;width:min(40%,520px);opacity:0;transition:opacity .8s 1.6s,transform .8s 1.6s}
@@ -149,7 +146,7 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #tmid p{margin:14px 0 18px;font-size:clamp(9px,1vw,13px);line-height:1.6;color:#f4f4f4;text-shadow:2px 2px 0 #000}
 #tmid a{display:inline-block;padding:12px 18px;background:#6aa43e;color:#0b1a08;text-decoration:none;font-size:clamp(11px,1.1vw,14px);box-shadow:0 0 0 3px #000,inset -3px -3px 0 #3d7a2c,inset 3px 3px 0 #b8e27a}
 #tmid a:hover,#tmid a:focus-visible{background:#86bf52;outline:none}
-@media (max-width:600px){#tmid{width:46%;top:27%}#gh{width:122px}}
+@media (max-width:600px){#tmid{width:46%;top:27%}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=VT323&family=Baloo+2:wght@800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700&family=Patrick+Hand&family=Press+Start+2P&display=swap">
@@ -411,9 +408,8 @@ function frame(ts){
 </section>
 <section id="tree" aria-label="Sprout"><canvas id="tcv" aria-hidden="true"></canvas>
   <div id="tmid"><h2>Sprout</h2><p>grow trees, set them on fire, make it rain</p><a href="https://rainbowroar14.github.io/Tree/" target="_blank" rel="noopener">open</a></div>
-  <div id="gh"><div class="post"></div><div class="arm"></div><div class="sign"><div class="rope a"></div><div class="rope b"></div>
-    <div class="board"><div class="t"><i></i>GitHub</div><a href="https://github.com/rainbowroar14" target="_blank" rel="noopener">rainbowroar14</a></div></div></div></section>
-<script src="tree.js?v=23c13301"></script>
+  <div id="gh"><img src="sprout/sign.png?v=970cd4ed" alt=""><div class="board"><div class="t"><i></i>GitHub</div><a href="https://github.com/rainbowroar14" target="_blank" rel="noopener">rainbowroar14</a></div></div></section>
+<script src="tree.js?v=73f839f5"></script>
 <script src="casino.js?v=91c43599"></script>
 <script src="sticky.js?v=e4b5ada3"></script>
 
