@@ -94,10 +94,33 @@ function paint(g,paths,soft){ // glossy cream: drop shadow (blurred only in the 
   g.restore();}
 function drawSplat(u,final){if(!pat)pat=mkPat(cx);cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,W,H);
   paint(cx,[polyPath(Math.min(u,T_END))],!!final);if(!final)grabMice(u);else GM.forEach(g=>g.m.style.opacity=0);}
-function layoutExtras(){const es=Math.max(.45,Math.min(1,W/1100,H/950));extras.style.setProperty('--es',es.toFixed(3));
-  [...extras.children].forEach((el,k)=>{const a=(W<600&&k===0)?[-.42,-.4]:ANCH[k%ANCH.length];let x=W/2+a[0]*RX()*.98,y=H/2+a[1]*RY()*.98;
-    const hw=el.offsetWidth*es/2+10,hh=el.offsetHeight*es/2+10;x=Math.max(hw,Math.min(W-hw,x));y=Math.max(hh,Math.min(H-hh,y));
-    el.style.left=x+'px';el.style.top=y+'px';});}
+// ---- responsive collision-checked layout: every note, meme and doodle sits fully inside the board's safe ellipse and the
+// section (which is one viewport tall), clear of the STICKY BOARD letters and of each other.
+let RECTS=[],LET_R=null,FREE=[];
+const SAFE=.8,MG=10;
+function inSafe(x,y){const nx=(x-W/2)/RX(),ny=(y-H/2)/RY();return nx*nx+ny*ny<=SAFE*SAFE;}
+function rectOK(r,list){if(r.x<MG||r.y<MG||r.x+r.w>W-MG||r.y+r.h>H-MG)return false;
+  if(!(inSafe(r.x,r.y)&&inSafe(r.x+r.w,r.y)&&inSafe(r.x,r.y+r.h)&&inSafe(r.x+r.w,r.y+r.h)))return false;
+  for(const o of list)if(r.x<o.x+o.w+MG&&r.x+r.w+MG>o.x&&r.y<o.y+o.h+MG&&r.y+r.h+MG>o.y)return false;return true;}
+function findSpot(w,h,pref,list){let best=null,bd=1e18;const st=Math.max(8,Math.min(W,H)/60);
+  for(let y=MG;y+h<=H-MG;y+=st)for(let x=MG;x+w<=W-MG;x+=st){const r={x,y,w,h};if(!rectOK(r,list))continue;
+    const d=(x+w/2-pref[0])**2+(y+h/2-pref[1])**2;if(d<bd){bd=d;best=r;}}return best;}
+function letterRect(){const sz=Math.round(Math.min(W/7.6,H/11,96)),w=6*sz*1.12+sz*.3,h=sz*2.25+sz*.35;return {x:W/2-w/2,y:H/2-h/2-sz*.05,w,h};}
+const DOODLE_SZ=[[76,76],[58,58],[60,56],[92,56]]; // smiley, star, heart, lol! (css px at S=1)
+function layoutExtras(){
+  LET_R=letterRect();let es=Math.max(.45,Math.min(1,W/1100,H/800));
+  for(let tries=0;tries<12;tries++){const list=[LET_R],out=[];let ok=true;
+    [...extras.children].forEach((el,k)=>{if(!ok)return;if(getComputedStyle(el).display==='none'){out.push(null);return;}
+      const a=ANCH[k%ANCH.length],w=el.offsetWidth*es*1.1,h=el.offsetHeight*es*1.1+14*es; // +rotation slack, +tape
+      const r=findSpot(w,h,[W/2+a[0]*RX()*.8,H/2+a[1]*RY()*.8],list);if(!r){ok=false;return;}list.push(r);out.push(r);});
+    if(ok){extras.style.setProperty('--es',es.toFixed(3));RECTS=list;
+      [...extras.children].forEach((el,k)=>{const r=out[k];if(!r)return;el.style.left=(r.x+r.w/2)+'px';el.style.top=(r.y+r.h/2+7*es)+'px';});
+      return;}
+    es*=.9;}
+  extras.style.setProperty('--es',es.toFixed(3));RECTS=[LET_R];}
+function doodleSpots(S){const list=RECTS.slice(),spots=[];const pref=[[W/2,LET_R.y-60*S],[W/2+LET_R.w*.6,LET_R.y],[W/2-LET_R.w*.3,LET_R.y+LET_R.h+60*S],[W/2+LET_R.w*.3,LET_R.y+LET_R.h+50*S]];
+  DOODLE_SZ.forEach(([w,h],i)=>{const r=findSpot(w*S+8,h*S+8,pref[i],list);if(r){list.push(r);spots.push([r.x+r.w/2,r.y+r.h/2]);}else spots.push(null);});
+  FREE=list;return spots;}
 function resize(){const r=sec.getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(1.5,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;layoutExtras();}
 function finalState(){state=3;sec.classList.add('done');targets();resize();drawSplat(T_END,true);buildDoodles();dragIn(0,true);doodle(0,true);
   items.forEach(it=>{place(it,it.tx,it.ty,+it.n.dataset.tilt,1);it.n.style.opacity=1;mouse(it,0,0,0,false);});}
@@ -116,23 +139,27 @@ function buildDoodles(){svg.innerHTML='';strokes=[];svg.setAttribute('viewBox',`
   const S=Math.max(.55,Math.min(1.1,Math.min(W,H)/850)),P=(x,y)=>[W/2+x*RX(),H/2+y*RY()];
   const add=(d,w=4.2)=>{const p=document.createElementNS(SVGN,'path');p.setAttribute('d',d);p.setAttribute('stroke-width',w*S);svg.append(p);strokes.push({p,L:0});};
   const circ=(cx,cy,r,turn=1.08)=>{let d='';const n=26;for(let i=0;i<=n*turn;i++){const a=-1.9+i/n*6.283,rr_=r*(1+.04*Math.sin(i*1.7));d+=(i?'L':'M')+(cx+Math.cos(a)*rr_+jit()*.4).toFixed(1)+' '+(cy+Math.sin(a)*rr_+jit()*.4).toFixed(1);}return d;};
-  const W_=W<600;
+  const W_=W<600,SPOT=doodleSpots(S);
   // smiley
-  {const [x,y]=P(W_?.28:-.08,W_?-.2:-.4),r=34*S;add(circ(x,y,r));add(`M${x-12*S} ${y-9*S}l${1*S} ${7*S}`);add(`M${x+12*S} ${y-9*S}l${1*S} ${7*S}`);
+  if(SPOT[0]){const [x,y]=SPOT[0],r=34*S;add(circ(x,y,r));add(`M${x-12*S} ${y-9*S}l${1*S} ${7*S}`);add(`M${x+12*S} ${y-9*S}l${1*S} ${7*S}`);
    add(`M${x-18*S} ${y+8*S}Q${x} ${y+28*S} ${x+19*S} ${y+6*S}`);}
   // arrows pointing at memes (cat + doge)
   const arrow=(from,to)=>{const [x0,y0]=from,[x1,y1]=to,mx=(x0+x1)/2+(y1-y0)*.25,my=(y0+y1)/2-(x1-x0)*.25;add(`M${x0} ${y0}Q${mx} ${my} ${x1} ${y1}`);
     const a=Math.atan2(y1-my,x1-mx),h=16*S;add(`M${x1-Math.cos(a-.5)*h} ${y1-Math.sin(a-.5)*h}L${x1} ${y1}L${x1-Math.cos(a+.5)*h} ${y1-Math.sin(a+.5)*h}`);};
   const at=(el,dx,dy)=>[parseFloat(el.style.left)+dx,parseFloat(el.style.top)+dy];
   const cat=EX.find(e=>e.dataset.alt==='maxwell'),doge=EX.find(e=>e.dataset.alt==='doge');
-  if(cat){const t=at(cat,cat.offsetWidth*.32,-cat.offsetHeight*.1);arrow([t[0]+110*S,t[1]-70*S],t);}
-  if(doge){const t=at(doge,doge.offsetWidth*.3,-doge.offsetHeight*.3);arrow([t[0]+120*S,t[1]-75*S],t);}
+  const es=+extras.style.getPropertyValue('--es')||1,inR=(x,y)=>FREE.some(o=>x>o.x-6&&x<o.x+o.w+6&&y>o.y-6&&y<o.y+o.h+6);
+  const point=(el)=>{if(!el||getComputedStyle(el).display==='none')return;const cx0=parseFloat(el.style.left),cy0=parseFloat(el.style.top),hw=el.offsetWidth*es/2,hh=el.offsetHeight*es/2;
+    let dx=W/2-cx0,dy=H/2-cy0;const m=Math.hypot(dx,dy)||1;dx/=m;dy/=m;const k=Math.min(hw/Math.max(.01,Math.abs(dx)),hh/Math.max(.01,Math.abs(dy)))+8,t=[cx0+dx*k,cy0+dy*k];
+    for(const th of [0,.45,-.45,.9,-.9,1.3,-1.3])for(const L of [110*S,80*S,60*S]){const ax=Math.cos(th)*dx-Math.sin(th)*dy,ay=Math.sin(th)*dx+Math.cos(th)*dy,p0=[t[0]+ax*L,t[1]+ay*L];
+      let ok=inSafe(p0[0],p0[1]);for(let q=.25;q<=1&&ok;q+=.25)if(inR(t[0]+ax*L*q,t[1]+ay*L*q))ok=false;if(ok){arrow(p0,t);return;}}};
+  point(cat);point(doge);
   // heart
-  {const [x,y]=P(W_?-.3:-.22,W_?.3:.42),s=22*S;add(`M${x} ${y+s*1.1}C${x-s*2.2} ${y-s*.2} ${x-s*1.1} ${y-s*1.7} ${x} ${y-s*.5}C${x+s*1.1} ${y-s*1.7} ${x+s*2.2} ${y-s*.2} ${x+jit()} ${y+s*1.1}`);}
+  if(SPOT[2]){const [x,y]=[SPOT[2][0],SPOT[2][1]-4*S],s=22*S;add(`M${x} ${y+s*1.1}C${x-s*2.2} ${y-s*.2} ${x-s*1.1} ${y-s*1.7} ${x} ${y-s*.5}C${x+s*1.1} ${y-s*1.7} ${x+s*2.2} ${y-s*.2} ${x+jit()} ${y+s*1.1}`);}
   // star
-  {const [x,y]=P(W_?.3:.36,W_?-.5:-.2),r=26*S;let d='';for(let i=0;i<=5;i++){const a=-Math.PI/2+i*4*Math.PI/5;d+=(i?'L':'M')+(x+Math.cos(a)*r+jit()).toFixed(1)+' '+(y+Math.sin(a)*r+jit()).toFixed(1);}add(d);}
+  if(SPOT[1]){const [x,y]=SPOT[1],r=26*S;let d='';for(let i=0;i<=5;i++){const a=-Math.PI/2+i*4*Math.PI/5;d+=(i?'L':'M')+(x+Math.cos(a)*r+jit()).toFixed(1)+' '+(y+Math.sin(a)*r+jit()).toFixed(1);}add(d);}
   // 'lol!' scribble
-  {const [x,y]=P(W_?.05:.26,W_?.3:.36),s=S;add(`M${x} ${y-26*s}Q${x-3*s} ${y-6*s} ${x+2*s} ${y+6*s}`,4.6);add(circ(x+20*s,y-2*s,9*s,1.05),4.6);
+  if(SPOT[3]){const [x,y]=[SPOT[3][0]-30*S,SPOT[3][1]+6*S],s=S;add(`M${x} ${y-26*s}Q${x-3*s} ${y-6*s} ${x+2*s} ${y+6*s}`,4.6);add(circ(x+20*s,y-2*s,9*s,1.05),4.6);
    add(`M${x+40*s} ${y-28*s}Q${x+37*s} ${y-6*s} ${x+43*s} ${y+6*s}`,4.6);add(`M${x+56*s} ${y-28*s}L${x+54*s} ${y-6*s}`,4.6);add(`M${x+53*s} ${y+3*s}l${1*s} ${1.5*s}`,6);
    add(`M${x-6*s} ${y+16*s}Q${x+30*s} ${y+24*s} ${x+66*s} ${y+13*s}`,3.4);}
   let tt=DOODLE_T0;for(const s of strokes){s.L=s.p.getTotalLength();s.p.style.strokeDasharray=s.L+' '+(s.L+2);s.p.style.strokeDashoffset=s.L;
