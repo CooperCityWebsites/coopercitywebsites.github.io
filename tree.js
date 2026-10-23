@@ -12,10 +12,10 @@ function mk(len,w,ang,d,st){ // recursive branch; ang relative to parent
     for(let i=0;i<n;i++){const s=(i/(n-1||1)-.5)*2;b.kids.push(mk(len*(.68+rnd()*.14),Math.max(1,w*.68),s*(.35+rnd()*.35)+(rnd()-.5)*.25,d+1,st+b.dur*(.6+rnd()*.3)));}}
   if(d>=4)for(let i=0,n=d>=5?3:2;i<n;i++)b.lv.push({u:.3+rnd()*.7,s:rnd()<.5?-1:1,c:LEAF[1+(rnd()*3|0)],a:rnd()*.8+.3,on:st+b.dur+.2+rnd()*.5});
   return b;}
-function size(){const r=sec.getBoundingClientRect();PX=Math.max(3,Math.round(r.height/170));W=Math.ceil(r.width/PX);H=Math.ceil(r.height/PX);cv.width=W;cv.height=H;sec.style.setProperty('--tpx',PX+'px');build();}
-function build(){seed=7;trees=[];const mob=W*PX<600,reach=W*(mob?.42:.3),hgt=H*.92;
-  for(const s of[-1,1])for(const [k,xo,lean] of [[1,.02,.42],[.62,mob?.2:.17,.18]]){
-    const L=Math.min(hgt*.3,reach*.42)*k;trees.push({x:s<0?W*xo:W*(1-xo),s,lean,root:mk(L,Math.max(2,L*.13),0,0,(k<1?.5:0)+(s>0?.15:0))});}}
+function size(){const r=sec.getBoundingClientRect();PX=r.width<600?3:Math.max(4,Math.round(r.height/120));W=Math.ceil(r.width/PX);H=Math.ceil(r.height/PX);cv.width=W;cv.height=H;sec.style.setProperty('--tpx',PX+'px');build();}
+function build(){seed=7;trees=[];const mob=W*PX<600,reach=W*(mob?.26:.3),hgt=H*.92;
+  for(const s of[-1,1])for(const [k,xo,lean] of [[1,.02,mob?.15:.42],[.62,mob?.1:.17,mob?.05:.18]]){
+    const L=(mob?Math.min(hgt*.2,W*.115):Math.min(hgt*.3,reach*.42))*k;trees.push({x:s<0?W*xo:W*(1-xo),s,lean,root:mk(L,Math.max(2,L*.13),0,0,(k<1?.5:0)+(s>0?.15:0))});}}
 let gt=0; // grow time
 function draw(b,x,y,a,age,amp,tr){
   const p=Math.min(1,Math.max(0,(age-b.st)/b.dur));if(p<=0)return;
@@ -29,8 +29,7 @@ function draw(b,x,y,a,age,amp,tr){
   for(const l of b.lv){const q=Math.min(1,Math.max(0,(age-l.on)/.4));if(!q)continue;
     const lx=x+(x2-x)*l.u,ly=y+(y2-y)*l.u,fl=Math.sin(t*6+l.a*9+b.ph)*.35*amp,la=a+l.s*(l.a+fl),sz=(2.2+l.a*2)*q,
       ex=lx+Math.sin(la)*sz*1.6,ey=ly-Math.cos(la)*sz*1.6;
-    g.fillStyle=LEAF[0];g.beginPath();g.ellipse((lx+ex)/2,(ly+ey)/2,sz*.62+.6,sz*1.05+.6,la,0,6.283);g.fill();
-    g.fillStyle=l.c;g.beginPath();g.ellipse((lx+ex)/2,(ly+ey)/2,sz*.55,sz*.95,la,0,6.283);g.fill();
+    const cx=Math.round((lx+ex)/2),cy=Math.round((ly+ey)/2),r=Math.max(1,Math.round(sz*.8));g.fillStyle=LEAF[0];g.fillRect(cx-r,cy-r+1,r*2+1,r*2);g.fillStyle=l.c;g.fillRect(cx-r+1,cy-r,r*2-1,r*2);
     if(started&&gt>4&&Math.random()<.00035*(1+gust*6)&&fall.length<40)fall.push({x:ex,y:ey,vx:0,vy:4,a:la,c:l.c,life:6});}}
 function frame(dt){
   t+=dt;if(started)gt+=dt;

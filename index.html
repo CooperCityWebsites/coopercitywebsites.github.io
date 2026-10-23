@@ -129,9 +129,8 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 @keyframes hb{50%{opacity:.3}}
 #rres #ragain{display:inline-block;text-decoration:none;margin-top:12px;padding:10px 14px;border:0;box-shadow:0 0 0 3px #1a0c00,inset -3px -3px 0 #8a5600,inset 3px 3px 0 #fff3b0;background:#ffd44a;color:#1a0c00;font:12px "Press Start 2P",monospace;cursor:pointer}
 #rres #ragain:hover{background:#ffe68a}#rres #ragain:active{transform:translateY(2px)}
-#tree{position:absolute;left:0;top:calc(400vh + max(100vh,560px));width:100%;height:max(65vh,420px);overflow:hidden;z-index:1;background:linear-gradient(#0d1410,#14201a);font-family:"Press Start 2P",monospace;color:#fff;
+#tree{position:absolute;left:0;top:calc(400vh + max(100vh,560px));width:100%;height:max(65vh,420px);overflow:hidden;z-index:1;background:linear-gradient(rgba(13,20,16,0),#0d1410 22%,#14201a);font-family:"Press Start 2P",monospace;color:#fff;
 }
-#tree::before{content:"";position:absolute;left:0;right:0;top:0;height:14%;background:linear-gradient(#141414,transparent);z-index:1;pointer-events:none}
 #gh{position:absolute;left:50%;bottom:calc(6 * var(--tpx,4px));transform:translateX(-50%);width:clamp(150px,16vw,210px);height:clamp(118px,24%,170px);z-index:2;opacity:0;transition:opacity .6s 2.2s}
 #tree.on #gh{opacity:1}
 #gh .post{position:absolute;left:8px;bottom:0;top:0;width:10px;background:#6b4426;box-shadow:inset 3px 0 0 #9a6a3e,0 0 0 2px #000}
@@ -150,7 +149,7 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #tmid p{margin:14px 0 18px;font-size:clamp(9px,1vw,13px);line-height:1.6;color:#f4f4f4;text-shadow:2px 2px 0 #000}
 #tmid a{display:inline-block;padding:12px 18px;background:#6aa43e;color:#0b1a08;text-decoration:none;font-size:clamp(11px,1.1vw,14px);box-shadow:0 0 0 3px #000,inset -3px -3px 0 #3d7a2c,inset 3px 3px 0 #b8e27a}
 #tmid a:hover,#tmid a:focus-visible{background:#86bf52;outline:none}
-@media (max-width:600px){#tmid{width:46%;top:27%}}
+@media (max-width:600px){#tmid{width:46%;top:27%}#gh{width:122px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=VT323&family=Baloo+2:wght@800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700&family=Patrick+Hand&family=Press+Start+2P&display=swap">
@@ -414,7 +413,7 @@ function frame(ts){
   <div id="tmid"><h2>Sprout</h2><p>grow trees, set them on fire, make it rain</p><a href="https://rainbowroar14.github.io/Tree/" target="_blank" rel="noopener">open</a></div>
   <div id="gh"><div class="post"></div><div class="arm"></div><div class="sign"><div class="rope a"></div><div class="rope b"></div>
     <div class="board"><div class="t"><i></i>GitHub</div><a href="https://github.com/rainbowroar14" target="_blank" rel="noopener">rainbowroar14</a></div></div></div></section>
-<script src="tree.js?v=46843084"></script>
+<script src="tree.js?v=23c13301"></script>
 <script src="casino.js?v=91c43599"></script>
 <script src="sticky.js?v=e4b5ada3"></script>
 
