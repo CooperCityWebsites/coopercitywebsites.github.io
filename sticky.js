@@ -33,32 +33,50 @@ function targets(){
 function place(it,x,y,rot,s){it.n.style.transform=`translate(${x}px,${y}px) translate(-50%,-50%) rotate(${rot}deg) scale(${s})`;}
 function mouse(it,x,y,sq,show){it.m.style.opacity=show?1:0;it.m.style.transform=`translate(${x}px,${y}px) scale(${1+sq},${1-sq})`;}
 // --- splat (smooth closed curve through lobed points + metaball-ish satellite blobs)
-function mkPat(){const c=document.createElement('canvas');c.width=c.height=28;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,28,28);g.fillStyle='#e7e5e4';g.beginPath();g.arc(14,14,1.3,0,7);g.fill();return cx.createPattern(c,'repeat');}
-function seedSplat(){blobs=[];drops=[];const L=18;const ph=[...Array(L)].map(()=>[rnd(.75,1.25),rnd(0,1)]);blobs.push({ph});
-  for(let i=0;i<26;i++){const a=rnd(0,6.283);drops.push({a,v:rnd(.5,1.4),r:rnd(5,16),dl:rnd(0,.15)});}}
-function smooth(pts){const n=pts.length;cx.moveTo((pts[0][0]+pts[n-1][0])/2,(pts[0][1]+pts[n-1][1])/2);
-  for(let i=0;i<n;i++){const p=pts[i],q=pts[(i+1)%n];cx.quadraticCurveTo(p[0],p[1],(p[0]+q[0])/2,(p[1]+q[1])/2);}cx.closePath();}
-function drawSplat(u){ // u: 0..~1.2 time
-  cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,W,H);
-  const ox=W/2,oy=H/2,Rmax=Math.hypot(W,H)*.62,R=Rmax*(.04+.96*elastic(u/1.25));
-  const ph=blobs[0].ph,L=ph.length,pts=[];
-  for(let i=0;i<L;i++){const a=i/L*6.283,w=1+.22*(ph[i][0]-1)*(1-clamp(u-.4))+.07*Math.sin(u*9+i*2.1);
-    const rr=R*(i%2?w*.86:w*1.08);pts.push([ox+Math.cos(a)*rr,oy+Math.sin(a)*rr*.82]);}
-  cx.beginPath();smooth(pts);
-  for(const d of drops){const k=clamp((u-d.dl)/1.3);if(k<=0)continue;const dist=R*.9+Rmax*.5*ease(k)*d.v,r=d.r*(1-k*.5);
-    const x=ox+Math.cos(d.a)*dist,y=oy+Math.sin(d.a)*dist*.82+k*k*40;cx.moveTo(x+r,y);cx.arc(x,y,r,0,6.283);}
-  cx.lineJoin='round';cx.lineWidth=10;cx.strokeStyle='#FF8FAB';cx.stroke();cx.lineWidth=4;cx.strokeStyle='#FFE566';cx.stroke();
-  cx.fillStyle=pat;cx.fill();
+// ---- blocky pixel splash: shape rasterised on a coarse grid (BK css px per block), hard edges, drips + square specks
+const BK=8;let G=null,gx=null,gw=0,gh=0,mask=null,rim=null;
+function mkPat(){const c=document.createElement('canvas');c.width=c.height=28;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,28,28);g.fillStyle='#e7e5e4';g.fillRect(13,13,2,2);return cx.createPattern(c,'repeat');}
+function seedSplat(){blobs=[];drops=[];const L=16;blobs.push({ph:[...Array(L)].map(()=>rnd(.82,1.2))});
+  for(let i=0;i<34;i++)drops.push({a:rnd(0,6.283),v:rnd(.06,.3),s:rnd(1,3)|0,dl:rnd(0,.25)});
+  blobs.drips=[...Array(9)].map(()=>({x:rnd(-.8,.8),len:rnd(3,9)|0,w:rnd(1,3)|0,dl:rnd(.5,.9)}));}
+function grid(){gw=Math.ceil(W/BK);gh=Math.ceil(H/BK);G=document.createElement('canvas');G.width=gw;G.height=gh;gx=G.getContext('2d',{willReadFrequently:true});
+  mask=document.createElement('canvas');mask.width=gw;mask.height=gh;rim=document.createElement('canvas');rim.width=gw;rim.height=gh;}
+function inside(nx,ny,k,ph){ // normalised splat test (lobed superellipse-ish), k = growth 0..~1.1
+  const a=Math.atan2(ny,nx),L=ph.length,f=(a/6.283+1)%1*L,i0=f|0,fr=f-i0,w=ph[i0%L]*(1-fr)+ph[(i0+1)%L]*fr;
+  return Math.hypot(nx,ny)<k*w;}
+function rasterSplat(u){ // binary block masks (core + 1-block rim), cheap at ~160x90
+  const k=.04+.96*elastic(u/1.25),ph=blobs[0].ph,rx=gw*.47,ry=gh*.42,cxg=gw/2,cyg=gh/2;
+  const md=gx.createImageData(gw,gh),rd=gx.createImageData(gw,gh),M=new Uint8Array(gw*gh);
+  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++)if(inside((x+.5-cxg)/rx,(y+.5-cyg)/ry,k,ph))M[y*gw+x]=1;
+  for(const d of blobs.drips){const e=clamp((u-d.dl)/.8);if(e<=0)continue;const x0=Math.round(cxg+d.x*rx*k);let yb=cyg;while(yb<gh-1&&M[(yb|0)*gw+x0])yb++;
+    const len=Math.round(d.len*ease(e));for(let yy=0;yy<len;yy++)for(let w=0;w<d.w-(yy>len-2?1:0);w++){const xx=x0+w,Y=(yb|0)+yy;if(xx>=0&&xx<gw&&Y<gh)M[Y*gw+xx]=1;}}
+  for(const d of drops){const e=clamp((u-d.dl)/1);if(e<=0)continue;const dist=k*(1.04+d.v*ease(e)),x0=Math.round(cxg+Math.cos(d.a)*dist*rx),y0=Math.round(cyg+Math.sin(d.a)*dist*ry);
+    for(let yy=0;yy<d.s;yy++)for(let xx=0;xx<d.s;xx++){const X=x0+xx,Y=y0+yy;if(X>=0&&Y>=0&&X<gw&&Y<gh)M[Y*gw+X]=1;}}
+  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){const i=y*gw+x;
+    if(M[i]){const e=!(M[i-1]&&M[i+1]&&M[i-gw]&&M[i+gw]);const o=i*4;if(e){rd.data[o+3]=255;}else md.data[o+3]=255;}}
+  mask.getContext('2d').putImageData(md,0,0);rim.getContext('2d').putImageData(rd,0,0);}
+function drawSplat(u){
+  rasterSplat(u);cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,W,H);cx.imageSmoothingEnabled=false;
+  const S=BK;cx.globalCompositeOperation='source-over';
+  cx.drawImage(rim,0,0,gw*S,gh*S);cx.globalCompositeOperation='source-in';cx.fillStyle='#FF8FAB';cx.fillRect(0,0,W,H); // pink block rim
+  cx.globalCompositeOperation='destination-over';cx.drawImage(mask,0,0,gw*S,gh*S);
+  // fill core with board pattern: draw core mask on temp, tint
+  cx.globalCompositeOperation='source-over';
+  if(!blobs.tmp){blobs.tmp=document.createElement('canvas');}
+  const T=blobs.tmp;if(T.width!==Math.ceil(W)||T.height!==Math.ceil(H)){T.width=Math.ceil(W);T.height=Math.ceil(H);}const tx=T.getContext("2d");tx.globalCompositeOperation="source-over";tx.clearRect(0,0,T.width,T.height);tx.imageSmoothingEnabled=false;
+  tx.drawImage(mask,0,0,gw*S,gh*S);tx.globalCompositeOperation='source-in';tx.fillStyle=pat;tx.fillRect(0,0,W,H);
+  tx.globalCompositeOperation='source-over';tx.fillStyle='#FFE566';  // yellow inner block band (stepped) just inside the rim
+  cx.drawImage(T,0,0);
 }
-function resize(){const r=sec.getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(1.5,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;}
-function finalState(){state=3;sec.classList.add('done');cv.style.display='none';targets();
+function resize(){const r=sec.getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(1.5,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;grid();if(!pat)pat=mkPat();}
+function finalState(){state=3;sec.classList.add('done');targets();resize();if(!blobs.length)seedSplat();drawSplat(3); // splash stays as the final hard-edged shape
   items.forEach(it=>{place(it,it.tx,it.ty,+it.n.dataset.tilt,1);it.n.style.opacity=1;mouse(it,0,0,0,false);});}
 function visible(){const r=sec.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;}
 function hook(dt){
   if(state===3)return;
   if(state===0){const r=sec.getBoundingClientRect();
     if(r.bottom<0){finalState();return;}           // loaded scrolled past it
-    if(r.top<innerHeight*.55&&r.bottom>innerHeight*.3){state=1;t=0;targets();resize();pat=mkPat();seedSplat();items.forEach(it=>it.n.style.opacity=1);}else return;}
+    if(r.top<innerHeight*.55&&r.bottom>innerHeight*.3){state=1;t=0;targets();resize();seedSplat();items.forEach(it=>it.n.style.opacity=1);}else return;}
   if(!visible())return;                             // skip all work off-screen
   t+=Math.min(dt,.05);
   if(state===1){let done=true;
@@ -71,7 +89,7 @@ function hook(dt){
       else if(k<2.3){const e=ease(clamp((k-1.4)/.9)),x=it.tx+12+(it.ex-it.tx)*e,y=it.ty+8+(it.ey-it.ty)*e;place(it,it.tx,it.ty,tilt,1);mouse(it,x,y,Math.sin(k*34)*.15,e<1);if(e<1)done=false;}
       else mouse(it,0,0,0,false);}
     if(done){state=2;t=0;}}
-  else if(state===2){drawSplat(t);if(t>1.25)sec.classList.add('done');if(t>1.9){finalState();}}
+  else if(state===2){drawSplat(t);if(t>1.25)sec.classList.add('done');if(t>2.2){finalState();}}
 }
 build();
 (window.FFC_HOOKS=window.FFC_HOOKS||[]).push(hook);
