@@ -1,182 +1,156 @@
-// Rift: crack forms in one section of the starry page, shatters into shards, reveals Archive of Things panel.
+// Rift: crack forms in one section of the sky, a jagged hole shatters open and reveals a peek at Archive of Things.
+// Perf: runs from the page's single rAF loop (FFC_HOOKS), does nothing off-screen, all glows/scars/sky baked once.
 (()=>{
 const el=document.getElementById('rift'),fx=document.getElementById('fx'),g=fx.getContext('2d');
-let PX=1,W=0,H=0,state=0,t0=0,time=0,last=null,crack=[],shards=[],seed=1;
+let PX=1,W=0,H=0,state=0,t0=0,time=0,crack=[],shards=[],seed=1,dirty=false;
+let pr={x:0,y:0,w:0,h:0};           // panel rect in page css px (cached; no per-frame layout reads)
+let hole=[],scars=[],layer=null,LM=0; // hole polygon (region-local canvas px), baked sky/scar layer
 const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
-function size(){PX=window.FFC_PX||1;W=Math.ceil(innerWidth/PX);H=Math.ceil(innerHeight/PX);fx.width=W;fx.height=H;}
-addEventListener('resize',size);
-function rect(){const r=el.getBoundingClientRect();return {x:r.left/PX,y:(r.top+scrollY)/PX,w:r.width/PX,h:r.height/PX};}
-// --- crack geometry (region-local, 0..w / 0..h), each segment has a grow time
-function buildCrack(R){
-  crack=[];seed=7;
-  const cx=R.w*.5,cy=R.h*.5;
-  function branch(x,y,ang,len,t,depth){
-    let px=x,py=y;const steps=Math.max(4,len/9|0);
-    for(let i=0;i<steps;i++){
-      ang+=(rnd()-.5)*.9;const L=len/steps;
-      const nx=clamp(px+Math.cos(ang)*L,0,R.w),ny=clamp(py+Math.sin(ang)*L,0,R.h);
+function measure(){PX=window.FFC_PX||1;W=Math.ceil(innerWidth/PX);H=Math.ceil(innerHeight/PX);fx.width=W;fx.height=H;
+  const r=el.getBoundingClientRect();pr={x:r.left,y:r.top+scrollY,w:r.width,h:r.height};
+  if(state>=2){layer=null;}}  // rebuild baked layer at new scale
+addEventListener('resize',()=>setTimeout(measure,50));
+const R=()=>({x:pr.x/PX,y:pr.y/PX,w:pr.w/PX,h:pr.h/PX});
+// ---------- geometry
+function buildHole(Rg){ // irregular jagged opening, roughly centred, ~60% x 70% of the window; big sky chunks stay
+  hole=[];seed=31;const cx=Rg.w*.5,cy=Rg.h*.54,N=34;
+  for(let i=0;i<N;i++){const a=i/N*6.283-1.57;
+    let k=(i%2?.78:1)*(.86+rnd()*.26);if(rnd()<.12)k*=.72;            // jagged teeth + occasional deep notch
+    const rx=Rg.w*.33*k,ry=Rg.h*.41*k;hole.push([cx+Math.cos(a)*rx,cy+Math.sin(a)*ry]);}
+}
+function inHole(x,y){let c=false;for(let i=0,j=hole.length-1;i<hole.length;j=i++){const [xi,yi]=hole[i],[xj,yj]=hole[j];
+  if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))c=!c;}return c;}
+function buildCrack(Rg){
+  crack=[];seed=7;const cx=Rg.w*.5,cy=Rg.h*.54;
+  function branch(x,y,ang,len,t,depth){let px=x,py=y;const steps=Math.max(4,len/9|0);
+    for(let i=0;i<steps;i++){ang+=(rnd()-.5)*.9;const L=len/steps;const nx=px+Math.cos(ang)*L,ny=py+Math.sin(ang)*L;
       crack.push({x0:px,y0:py,x1:nx,y1:ny,t:t+i*.05,w:depth?1:2});
-      if(depth<2&&rnd()<.28)branch(nx,ny,ang+(rnd()<.5?1:-1)*(.6+rnd()*.7),len*.45,t+i*.05+.05,depth+1);
-      px=nx;py=ny;if(nx<=0||nx>=R.w||ny<=0||ny>=R.h)break;
-    }}
-  branch(cx,cy,Math.PI+(rnd()-.5)*.3,R.w*.52,0,0);
-  branch(cx,cy,(rnd()-.5)*.3,R.w*.52,0,0);
-  branch(cx,cy,-Math.PI/2+(rnd()-.5)*.6,R.h*.5,.2,1);
-  branch(cx,cy,Math.PI/2+(rnd()-.5)*.6,R.h*.5,.25,1);
+      if(depth<2&&rnd()<.28)branch(nx,ny,ang+(rnd()<.5?1:-1)*(.6+rnd()*.7),len*.45,t+i*.05+.05,depth+1);px=nx;py=ny;}}
+  branch(cx,cy,Math.PI+(rnd()-.5)*.3,Rg.w*.42,0,0);branch(cx,cy,(rnd()-.5)*.3,Rg.w*.42,0,0);
+  branch(cx,cy,-Math.PI/2+(rnd()-.5)*.6,Rg.h*.45,.2,1);branch(cx,cy,Math.PI/2+(rnd()-.5)*.6,Rg.h*.45,.25,1);
 }
-let scars=[],rim=[],scarStars=[];
-function buildScars(R){
-  scars=[];rim=[];scarStars=[];seed=23;
-  // seeds: where crack hit the rim + a few extra points around the perimeter
-  const seeds=[];
-  for(const c of crack){if(c.x1<=0.5||c.x1>=R.w-.5||c.y1<=.5||c.y1>=R.h-.5)seeds.push([c.x1,c.y1]);}
-  const per=2*(R.w+R.h);for(let k=0;k<7;k++){let u=rnd()*per,x,y;
-    if(u<R.w){x=u;y=0;}else if(u<R.w+R.h){x=R.w;y=u-R.w;}else if(u<2*R.w+R.h){x=u-R.w-R.h;y=R.h;}else{x=0;y=u-2*R.w-R.h;}seeds.push([x,y]);}
-  const cx=R.w/2,cy=R.h/2;
-  for(const [x,y] of seeds){
-    let ang=Math.atan2(y-cy,(x-cx)*R.h/R.w)+(rnd()-.5)*.5,px=x,py=y;const len=(25+rnd()*70)/PX*1.5,steps=Math.max(3,len/7|0);
-    const path=[[px,py]];
+function buildScars(Rg){ // fracture lines radiating from the hole's rim out across the sky (over the hidden window parts)
+  scars=[];seed=23;const cx=Rg.w*.5,cy=Rg.h*.54;
+  for(let k=0;k<14;k++){const v=hole[(rnd()*hole.length)|0];let [px,py]=v,ang=Math.atan2(py-cy,px-cx)+(rnd()-.5)*.6;
+    const len=(30+rnd()*90)/PX*1.5,steps=Math.max(3,len/7|0),path=[[px,py]];
     for(let i=0;i<steps;i++){ang+=(rnd()-.5)*.8;px+=Math.cos(ang)*len/steps;py+=Math.sin(ang)*len/steps;path.push([px,py]);
-      if(rnd()<.18){let a2=ang+(rnd()<.5?1:-1)*(.7+rnd()*.6),bx=px,by=py;const sub=[[bx,by]];for(let j=0;j<3;j++){a2+=(rnd()-.5)*.8;bx+=Math.cos(a2)*len/steps;by+=Math.sin(a2)*len/steps;sub.push([bx,by]);}scars.push({p:sub,t:.3+rnd()*.3,w:1});}
-      if(rnd()<.5)scarStars.push([px+(rnd()-.5)*4,py+(rnd()-.5)*4,rnd()]);}
-    scars.push({p:path,t:rnd()*.3,w:1,seed:[x,y,ang]});
-  }
-  // jagged rim: teeth around the perimeter (sky chunks biting into the hole edge)
-  const step=6/PX*1.5;
-  const side=(x0,y0,x1,y1,nx,ny)=>{const L=Math.hypot(x1-x0,y1-y0),n=Math.max(2,L/step|0);
-    for(let i=0;i<=n;i++){const u=i/n;rim.push([x0+(x1-x0)*u+nx*(rnd()*5/PX*1.5),y0+(y1-y0)*u+ny*(rnd()*5/PX*1.5)]);}};
-  side(0,0,R.w,0,0,1);side(R.w,0,R.w,R.h,-1,0);side(R.w,R.h,0,R.h,0,-1);side(0,R.h,0,0,1,0);
+      if(rnd()<.16){let a2=ang+(rnd()<.5?1:-1)*(.7+rnd()*.6),bx=px,by=py;const sub=[[bx,by]];for(let j=0;j<3;j++){a2+=(rnd()-.5)*.8;bx+=Math.cos(a2)*len/steps;by+=Math.sin(a2)*len/steps;sub.push([bx,by]);}scars.push({p:sub,t:.3+rnd()*.3});}}
+    scars.push({p:path,t:rnd()*.3,seed:[v[0],v[1],Math.atan2(v[1]-cy,v[0]-cx)]});}
 }
-function buildShards(R){
+function line(c,x0,y0,x1,y1,w){x0|=0;y0|=0;x1|=0;y1|=0;const dx=Math.abs(x1-x0),dy=-Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1;let e=dx+dy;
+  for(let n=0;n<4000;n++){c.fillRect(x0,y0,w,w);if(x0===x1&&y0===y1)break;const e2=2*e;if(e2>=dy){e+=dy;x0+=sx;}if(e2<=dx){e+=dx;y0+=sy;}}}
+function bakeLayer(Rg){ // sky fragments covering the window (with stars), scars with glow, glowing rim lip. Built once.
+  LM=Math.ceil(130/PX*1.5);layer=document.createElement('canvas');layer.width=Math.ceil(Rg.w+LM*2);layer.height=Math.ceil(Rg.h+LM*2);
+  const c=layer.getContext('2d'),o=LM;seed=99;
+  // sky over the window except the hole (slightly larger than the window so its edges never peek out)
+  c.beginPath();c.rect(o-2,o-2,Rg.w+4,Rg.h+4);c.moveTo(o+hole[0][0],o+hole[0][1]);for(let i=hole.length-1;i>=0;i--)c.lineTo(o+hole[i][0],o+hole[i][1]);c.closePath();
+  c.fillStyle='#07060d';c.fill('evenodd');
+  c.save();c.clip('evenodd');for(let i=0;i<Rg.w*Rg.h/215;i++){const l=80+(rnd()*175|0);c.fillStyle=`rgb(${l},${l},${Math.min(255,l+30)})`;c.fillRect(o+rnd()*Rg.w|0,o+rnd()*Rg.h|0,PX<2?2:1,PX<2?2:1);}c.restore();
+  // scars: soft glow (wide faint line, blurred once) + bright core + displaced stars
+  const gl=document.createElement('canvas');gl.width=layer.width;gl.height=layer.height;const q=gl.getContext('2d');q.fillStyle='rgba(90,175,255,.9)';
+  for(const s of scars)for(let i=0;i<s.p.length-1;i++)line(q,o+s.p[i][0],o+s.p[i][1],o+s.p[i+1][0],o+s.p[i+1][1],3);
+  q.beginPath();q.moveTo(o+hole[0][0],o+hole[0][1]);for(const p of hole)q.lineTo(o+p[0],o+p[1]);q.closePath();q.strokeStyle='rgba(90,175,255,.9)';q.lineWidth=3;q.stroke();
+  c.save();c.filter='blur(3px)';c.globalAlpha=.7;c.drawImage(gl,0,0);c.restore();
+  for(const s of scars)for(let i=0;i<s.p.length-1;i++){c.fillStyle=`rgba(205,235,255,${.85-.55*i/s.p.length})`;line(c,o+s.p[i][0],o+s.p[i][1],o+s.p[i+1][0],o+s.p[i+1][1],1);
+    if(rnd()<.45){c.fillStyle='rgba(240,244,255,.9)';c.fillRect(o+s.p[i][0]+(rnd()-.5)*5|0,o+s.p[i][1]+(rnd()-.5)*5|0,1,1);}}
+  c.beginPath();c.moveTo(o+hole[0][0],o+hole[0][1]);for(const p of hole)c.lineTo(o+p[0],o+p[1]);c.closePath();c.strokeStyle='rgba(185,225,255,.95)';c.lineWidth=1;c.stroke();
+}
+function buildShards(Rg){ // only the sky inside the hole shatters; plus small rim debris along the scars
   shards=[];seed=11;const C=11,Rw=7,pts=[];
-  for(let j=0;j<=Rw;j++){pts.push([]);for(let i=0;i<=C;i++){
-    const edge=i===0||j===0||i===C||j===Rw;
-    pts[j].push([i/C*R.w+(edge?0:(rnd()-.5)*R.w/C*.8),j/Rw*R.h+(edge?0:(rnd()-.5)*R.h/Rw*.8)]);}}
-  const cx=R.w/2,cy=R.h/2;
-  for(let j=0;j<Rw;j++)for(let i=0;i<C;i++){
-    const a=pts[j][i],b=pts[j][i+1],c=pts[j+1][i+1],d=pts[j+1][i];
-    const tris=rnd()<.5?[[a,b,c],[a,c,d]]:[[a,b,d],[b,c,d]];
-    for(const tr of tris){
-      const mx=(tr[0][0]+tr[1][0]+tr[2][0])/3,my=(tr[0][1]+tr[1][1]+tr[2][1])/3;
-      const dx=mx-cx,dy=my-cy,dd=Math.hypot(dx,dy)||1,sp=(120+rnd()*220)*(1.2-dd/Math.hypot(cx,cy)*.5)/PX*1.5;
-      const stars=[];for(let k=0;k<3;k++)if(rnd()<.6){const u=rnd(),v=rnd()*(1-u);stars.push([tr[0][0]+(tr[1][0]-tr[0][0])*u+(tr[2][0]-tr[0][0])*v-mx,tr[0][1]+(tr[1][1]-tr[0][1])*u+(tr[2][1]-tr[0][1])*v-my]);}
-      shards.push({pts:tr.map(p=>[p[0]-mx,p[1]-my]),x:mx,y:my,vx:dx/dd*sp+(rnd()-.5)*40,vy:dy/dd*sp+(rnd()-.5)*40-30,
-        r:0,vr:(rnd()-.5)*7,delay:dd/Math.hypot(cx,cy)*.12,stars});
-    }}
-  for(const sc of scars){if(!sc.seed)continue;const [x,y,ang]=sc.seed;
-    for(let k=0;k<2;k++){const d=(3+k*6+rnd()*4)/PX*1.5,mx=x+Math.cos(ang)*d,my=y+Math.sin(ang)*d,z=(3+rnd()*3)/PX*1.5,sp=(60+rnd()*110)/PX*1.5;
-      shards.push({pts:[[-z,-z*.6],[z,-z*.3],[(rnd()-.5)*z,z]],x:mx,y:my,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp-20,r:rnd()*6,vr:(rnd()-.5)*9,delay:.08+rnd()*.35,stars:[],debris:1});}}
+  for(let j=0;j<=Rw;j++){pts.push([]);for(let i=0;i<=C;i++){const e=i===0||j===0||i===C||j===Rw;pts[j].push([i/C*Rg.w+(e?0:(rnd()-.5)*Rg.w/C*.8),j/Rw*Rg.h+(e?0:(rnd()-.5)*Rg.h/Rw*.8)]);}}
+  const cx=Rg.w/2,cy=Rg.h*.54,DD=Math.hypot(cx,cy);
+  for(let j=0;j<Rw;j++)for(let i=0;i<C;i++){const a=pts[j][i],b=pts[j][i+1],c=pts[j+1][i+1],d=pts[j+1][i];
+    for(const tr of (rnd()<.5?[[a,b,c],[a,c,d]]:[[a,b,d],[b,c,d]])){const mx=(tr[0][0]+tr[1][0]+tr[2][0])/3,my=(tr[0][1]+tr[1][1]+tr[2][1])/3;
+      if(!inHole(mx,my))continue;const dx=mx-cx,dy=my-cy,dd=Math.hypot(dx,dy)||1,sp=(120+rnd()*220)*(1.2-dd/DD*.5)/PX*1.5;
+      const st=[];for(let k=0;k<2;k++)if(rnd()<.6)st.push([(rnd()-.5)*6,(rnd()-.5)*6]);
+      shards.push({pts:tr.map(p=>[p[0]-mx,p[1]-my]),x:mx,y:my,vx:dx/dd*sp+(rnd()-.5)*40,vy:dy/dd*sp+(rnd()-.5)*40-30,r:0,vr:(rnd()-.5)*7,delay:dd/DD*.12,st});}}
+  for(const s of scars){if(!s.seed)continue;const [x,y,ang]=s.seed;
+    for(let k=0;k<2;k++){const d=(2+k*5+rnd()*3)/PX*1.5,mx=x+Math.cos(ang)*d,my=y+Math.sin(ang)*d,z=(2.5+rnd()*2.5)/PX*1.5,sp=(60+rnd()*110)/PX*1.5;
+      shards.push({pts:[[-z,-z*.6],[z,-z*.3],[(rnd()-.5)*z,z]],x:mx,y:my,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp-20,r:rnd()*6,vr:(rnd()-.5)*9,delay:.08+rnd()*.35,st:[]});}}
 }
-function line(x0,y0,x1,y1,w){ // pixel-crisp Bresenham
-  x0|=0;y0|=0;x1|=0;y1|=0;const dx=Math.abs(x1-x0),dy=-Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1;let e=dx+dy;
-  for(;;){g.fillRect(x0,y0,w,w);if(x0===x1&&y0===y1)break;const e2=2*e;if(e2>=dy){e+=dy;x0+=sx;}if(e2<=dx){e+=dx;y0+=sy;}}}
 const T_CRACK=1.5,T_HOLD=.35,T_SHARD=1.8;
-function reveal(){el.classList.add('open');}
-function frame(ts){
-  if(last===null)last=ts;let dt=Math.min(Math.max((ts-last)/1000,0),1/20);last=ts;time+=dt;
-  if(window.FFC_PX&&window.FFC_PX!==PX)size();
-  g.clearRect(0,0,W,H);
-  const R=rect(),sc=scrollY/PX,ox=R.x,oy=R.y-sc;
-  if(state===0){ // trigger when section centre reaches lower 70% of viewport
-    const r=el.getBoundingClientRect();
-    if(r.top<innerHeight*.7&&r.bottom>0){state=1;t0=time;buildCrack(R);buildScars(R);}
-    else if(r.bottom<=0){buildCrack(R);buildScars(R);state=3;reveal();}   // loaded already past it
-  }
-  const t=time-t0;
-  if(state>=1&&scars.length){
-    const age=state===1?Math.max(0,t/T_CRACK-.55)/.45:(state===2?1:1);
-    for(const sc of scars){const pr=clamp((age-sc.t)/.5);if(pr<=0)continue;const n=Math.max(1,Math.round((sc.p.length-1)*pr));
-      for(let i=0;i<n;i++){const a=sc.p[i],b=sc.p[i+1];
-        g.save();g.shadowColor='rgba(80,170,255,.8)';g.shadowBlur=6;g.fillStyle='rgba(120,190,255,.35)';line(ox+a[0],oy+a[1],ox+b[0],oy+b[1],2);g.restore();
-        g.fillStyle=`rgba(200,232,255,${.75-.5*i/sc.p.length})`;line(ox+a[0],oy+a[1],ox+b[0],oy+b[1],1);}}
-    if(state>=2){for(const [x,y,b] of scarStars){g.fillStyle=`rgba(235,240,255,${.5+.5*Math.sin(time*2+b*9)})`;g.fillRect(ox+x|0,oy+y|0,1,1);}
-      // jagged rim: dark sky teeth over the hole edge with a glowing lip
-      g.beginPath();const sx=ox,sy=oy;g.moveTo(sx+rim[0][0],sy+rim[0][1]);for(const p of rim)g.lineTo(sx+p[0],sy+p[1]);g.closePath();
-      g.save();g.beginPath();g.rect(sx-4,sy-4,R.w+8,R.h+8);g.moveTo(sx+rim[0][0],sy+rim[0][1]);for(let i=rim.length-1;i>=0;i--)g.lineTo(sx+rim[i][0],sy+rim[i][1]);g.closePath();
-      g.fillStyle='#07060d';g.fill('evenodd');g.restore();
-      g.save();g.beginPath();g.moveTo(sx+rim[0][0],sy+rim[0][1]);for(const p of rim)g.lineTo(sx+p[0],sy+p[1]);g.closePath();
-      g.shadowColor='rgba(80,170,255,1)';g.shadowBlur=8;g.strokeStyle='rgba(170,220,255,.85)';g.lineWidth=1;g.stroke();g.restore();}
-  }
-  if(state===1){
-    const k=t/T_CRACK;
-    // light leaking: soft glow behind crack, grows
-    g.save();g.globalCompositeOperation='lighter';
-    const rg=g.createRadialGradient(ox+R.w/2,oy+R.h/2,0,ox+R.w/2,oy+R.h/2,R.w*.6);
-    rg.addColorStop(0,`rgba(120,190,255,${.25*clamp(k)})`);rg.addColorStop(1,'rgba(0,128,128,0)');g.fillStyle=rg;g.fillRect(ox,oy,R.w,R.h);g.restore();
-    const flick=t>T_CRACK?(.7+.3*Math.sin(t*60)):1;
-    for(const s of crack){const p=clamp((k*1.15-s.t)/.12);if(p<=0)continue;
-      const x1=s.x0+(s.x1-s.x0)*p,y1=s.y0+(s.y1-s.y0)*p;
-      g.save();g.shadowColor='rgba(80,170,255,1)';g.shadowBlur=8;g.fillStyle=`rgba(170,220,255,${flick})`;
-      line(ox+s.x0,oy+s.y0,ox+x1,oy+y1,s.w+1);g.restore();
-      g.fillStyle='#ffffff';line(ox+s.x0,oy+s.y0,ox+x1,oy+y1,s.w);}
-    if(t>T_CRACK+T_HOLD){state=2;t0=time;buildShards(R);reveal();}
-  }
+function reveal(){el.classList.add('open');document.dispatchEvent(new Event('rift-open'));}
+window.RIFT_HIT=(clientX,clientY)=>{ // is a click inside the opening? (sky fragments block the rest)
+  if(state<2||!hole.length)return false;const x=(clientX-pr.x)/PX,y=(clientY+scrollY-pr.y)/PX;return inHole(x,y);};
+function hook(dt){
+  time+=dt;if(window.FFC_PX&&window.FFC_PX!==PX)measure();
+  const top=pr.y-scrollY,vis=top<innerHeight+200&&top+pr.h>-200;
+  if(state===0){ if(top<innerHeight*.7&&top+pr.h>0){const Rg=R();buildHole(Rg);buildCrack(Rg);buildScars(Rg);state=1;t0=time;document.dispatchEvent(new Event('rift-open'));}
+    else if(top+pr.h<=0){const Rg=R();buildHole(Rg);buildCrack(Rg);buildScars(Rg);state=3;reveal();} }
+  if(state===0){if(dirty){g.clearRect(0,0,W,H);dirty=false;}return;}
+  if(!vis&&state!==1&&state!==2){if(dirty){g.clearRect(0,0,W,H);dirty=false;}return;}   // off-screen: no work
+  if(state===2&&!vis){}                                                                  // keep simulating briefly
+  g.clearRect(0,0,W,H);dirty=true;
+  const Rg=R(),ox=Rg.x,oy=Rg.y-scrollY/PX,t=time-t0;
+  if(state===1){const k=t/T_CRACK;
+    const rg=g.createRadialGradient(ox+Rg.w/2,oy+Rg.h*.54,0,ox+Rg.w/2,oy+Rg.h*.54,Rg.w*.5);
+    rg.addColorStop(0,`rgba(120,190,255,${.22*clamp(k)})`);rg.addColorStop(1,'rgba(0,128,128,0)');g.fillStyle=rg;g.fillRect(ox,oy,Rg.w,Rg.h);
+    const fl=t>T_CRACK?(.7+.3*Math.sin(t*60)):1;
+    g.fillStyle=`rgba(90,170,255,${.35*fl})`;
+    for(const s of crack){const p=clamp((k*1.15-s.t)/.12);if(p>0)line(g,ox+s.x0-1,oy+s.y0-1,ox+s.x0+(s.x1-s.x0)*p-1,oy+s.y0+(s.y1-s.y0)*p-1,s.w+2);}
+    g.fillStyle=`rgba(235,246,255,${fl})`;
+    for(const s of crack){const p=clamp((k*1.15-s.t)/.12);if(p>0)line(g,ox+s.x0,oy+s.y0,ox+s.x0+(s.x1-s.x0)*p,oy+s.y0+(s.y1-s.y0)*p,s.w);}
+    // scars start creeping out late in the crack phase
+    const age=clamp((k-.55)/.45);g.fillStyle='rgba(200,232,255,.7)';
+    for(const s of scars){const q=clamp((age-s.t)/.5);const n=Math.round((s.p.length-1)*q);for(let i=0;i<n;i++)line(g,ox+s.p[i][0],oy+s.p[i][1],ox+s.p[i+1][0],oy+s.p[i+1][1],1);}
+    if(t>T_CRACK+T_HOLD){state=2;t0=time;buildShards(Rg);reveal();}
+    return;}
+  if(!layer)bakeLayer(Rg);
+  g.drawImage(layer,ox-LM,oy-LM);
   if(state===2){
-    // flash
-    if(t<.35){g.fillStyle=`rgba(220,240,255,${(1-t/.35)*.85})`;g.fillRect(ox,oy,R.w,R.h);}
-    let alive=0;
-    for(const s of shards){
-      const lt=t-s.delay;
+    if(t<.35){g.globalAlpha=(1-t/.35)*.85;g.fillStyle='rgb(220,240,255)';g.beginPath();g.moveTo(ox+hole[0][0],oy+hole[0][1]);for(const p of hole)g.lineTo(ox+p[0],oy+p[1]);g.fill();g.globalAlpha=1;}
+    let alive=0;g.strokeStyle='rgba(150,210,255,.9)';g.lineWidth=1;
+    for(const s of shards){const lt=t-s.delay;
       if(lt>0){s.vy+=160*dt/PX*1.5;const dr=Math.exp(-.6*dt);s.vx*=dr;s.vy*=dr;s.x+=s.vx*dt;s.y+=s.vy*dt;s.r+=s.vr*dt;}
       const a=clamp(1-Math.max(0,lt)/T_SHARD);if(a<=0)continue;alive++;
-      g.save();g.globalAlpha=a;g.translate(ox+s.x,oy+s.y);g.rotate(s.r);
-      g.beginPath();g.moveTo(s.pts[0][0],s.pts[0][1]);g.lineTo(s.pts[1][0],s.pts[1][1]);g.lineTo(s.pts[2][0],s.pts[2][1]);g.closePath();
-      g.fillStyle='#07060d';g.fill();g.strokeStyle=lt>0?'rgba(150,210,255,.9)':'rgba(255,255,255,.0)';g.lineWidth=1;g.stroke();
-      g.fillStyle='#dfe6ff';for(const st of s.stars)g.fillRect(st[0]|0,st[1]|0,1,1);
-      g.restore();}
-    if(!alive||t>T_SHARD+.5)state=3;
-  }
-  requestAnimationFrame(frame);
+      const c=Math.cos(s.r),sn=Math.sin(s.r),X=ox+s.x,Y=oy+s.y,P=s.pts;
+      g.globalAlpha=a;g.beginPath();
+      g.moveTo(X+P[0][0]*c-P[0][1]*sn,Y+P[0][0]*sn+P[0][1]*c);g.lineTo(X+P[1][0]*c-P[1][1]*sn,Y+P[1][0]*sn+P[1][1]*c);g.lineTo(X+P[2][0]*c-P[2][1]*sn,Y+P[2][0]*sn+P[2][1]*c);g.closePath();
+      g.fillStyle='#07060d';g.fill();if(lt>0)g.stroke();
+      if(s.st.length){g.fillStyle='#dfe6ff';for(const q of s.st)g.fillRect(X+q[0]|0,Y+q[1]|0,1,1);}}
+    g.globalAlpha=1;if(!alive||t>T_SHARD+.5)state=3;}
 }
-size();requestAnimationFrame(frame);
+(window.FFC_HOOKS=window.FFC_HOOKS||[]).push(hook);
+addEventListener('load',measure);measure();
 })();
 
-// ---- realistic cloud lettering + click reveal
+// ---- cloud lettering (rendered ONCE, animated with CSS transforms only) + click reveal
 (()=>{
-const scr=document.getElementById('scr'),cv=document.getElementById('clouds'),c=cv.getContext('2d');
-const TEXT='Archive of Things';let puffs=[],sprites=[],W=0,H=0,DPR=1,last=null,t=0,built=false;
-function puffSprite(seed,shade){ // noise-textured soft puff: light top, grey underside
-  const S=96,o=document.createElement('canvas');o.width=o.height=S;const x=o.getContext('2d');let r=seed;const R=()=>(r=(r*16807)%2147483647)/2147483647;
+const scr=document.getElementById('scr'),cv=document.getElementById('clouds'),cv2=document.getElementById('clouds2');
+const TEXT='Archive of Things';let built=false;
+function puffSprite(seed){const S=96,o=document.createElement('canvas');o.width=o.height=S;const x=o.getContext('2d');let r=seed;const R=()=>(r=(r*16807)%2147483647)/2147483647;
   for(let i=0;i<46;i++){const a=R()*6.283,d=Math.pow(R(),.7)*S*.3,px=S/2+Math.cos(a)*d,py=S/2+Math.sin(a)*d*.8,rr=S*(.08+R()*.16);
     const gr=x.createRadialGradient(px,py,0,px,py,rr);gr.addColorStop(0,'rgba(255,255,255,.55)');gr.addColorStop(.6,'rgba(255,255,255,.22)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(0,0,S,S);}
   x.globalCompositeOperation='source-atop';const sh=x.createLinearGradient(0,S*.15,0,S*.9);
-  sh.addColorStop(0,'rgba(255,255,255,0)');sh.addColorStop(.55,'rgba(225,232,242,'+(.25*shade)+')');sh.addColorStop(1,'rgba(150,162,182,'+(.85*shade)+')');x.fillStyle=sh;x.fillRect(0,0,S,S);
-  return o;}
-function build(){
-  const r=scr.getBoundingClientRect();if(r.width<10)return;DPR=Math.min(2,devicePixelRatio||1);W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;
-  if(!sprites.length)for(let i=0;i<10;i++)sprites.push(puffSprite(1000+i*7919,1));
+  sh.addColorStop(0,'rgba(255,255,255,0)');sh.addColorStop(.55,'rgba(225,232,242,.25)');sh.addColorStop(1,'rgba(150,162,182,.85)');x.fillStyle=sh;x.fillRect(0,0,S,S);return o;}
+function render(canvas,seed0){
+  const r=scr.getBoundingClientRect();if(r.width<10)return false;const DPR=Math.min(1.5,devicePixelRatio||1),W=r.width,H=r.height;
+  canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);const c=canvas.getContext('2d');c.setTransform(DPR,0,0,DPR,0,0);
+  const sprites=[];for(let i=0;i<10;i++)sprites.push(puffSprite(seed0+i*7919));
   const m=document.createElement('canvas'),mw=Math.round(W),mh=Math.round(H);m.width=mw;m.height=mh;const x=m.getContext('2d');
-  let fs=Math.min(mh*.24,mw*.1);x.font=`800 ${fs}px "Baloo 2", system-ui, sans-serif`;
-  while(x.measureText(TEXT).width>mw*.9){fs*=.95;x.font=`800 ${fs}px "Baloo 2", system-ui, sans-serif`;}
-  x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';x.fillText(TEXT,mw/2,mh*.28);
-  const d=x.getImageData(0,0,mw,mh).data,step=Math.max(2.5,fs/17);puffs=[];let s=7;const R=()=>(s=(s*16807)%2147483647)/2147483647;
-  for(let y=0;y<mh;y+=step)for(let xx=0;xx<mw;xx+=step){const jx=xx+(R()-.5)*step,jy=y+(R()-.5)*step;const i=((jy|0)*mw+(jx|0))*4;
-    if(jx>=0&&jy>=0&&jx<mw&&jy<mh&&d[i+3]>128)puffs.push({x:jx,y:jy,r:step*(1.05+R()*.75),sp:sprites[R()*sprites.length|0],ph:R()*6.28,f:.25+R()*.5,a:.55+R()*.35});}
-  puffs.sort((a,b)=>a.y-b.y);built=true;}
-function frame(ts){if(last===null)last=ts;const dt=Math.min(.05,(ts-last)/1000);last=ts;t+=dt;
-  if(document.getElementById('rift').classList.contains('open')){
-    if(!built)build();
-    c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0,W,H);
-    const drift=Math.sin(t*.07)*6;
-    // soft grey shadow/base layer, then fluffy white puffs; slight blur for volume
-    c.filter="blur(1px)";
-    for(const p of puffs){const m=1+.12*Math.sin(t*p.f+p.ph),ox=Math.sin(t*p.f*.7+p.ph)*1.6+drift,oy=Math.cos(t*p.f*.6+p.ph)*1.2;
-      const r=p.r*m;c.globalAlpha=p.a*.35;c.drawImage(p.sp,p.x+ox-r*1.1,p.y+oy-r*1.1+r*.35,r*2.2,r*2.2);}
-    c.filter="blur(.35px)";
-    for(const p of puffs){const m=1+.12*Math.sin(t*p.f+p.ph),ox=Math.sin(t*p.f*.7+p.ph)*1.6+drift,oy=Math.cos(t*p.f*.6+p.ph)*1.2;
-      const r=p.r*m*.9;c.globalAlpha=p.a;c.drawImage(p.sp,p.x+ox-r,p.y+oy-r,r*2,r*2);}
-    c.filter='none';c.globalAlpha=1;}
-  requestAnimationFrame(frame);}
-addEventListener('resize',()=>{built=false;});
-(document.fonts?document.fonts.load('800 40px "Baloo 2"'):Promise.resolve()).finally(()=>{built=false;requestAnimationFrame(frame);});
-// click sequence
+  let fs=Math.min(mh*.17,mw*.085);x.font=`800 ${fs}px "Baloo 2", system-ui, sans-serif`;
+  while(x.measureText(TEXT).width>mw*.62){fs*=.95;x.font=`800 ${fs}px "Baloo 2", system-ui, sans-serif`;}
+  x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';x.fillText(TEXT,mw/2,mh*.33);
+  const d=x.getImageData(0,0,mw,mh).data,step=Math.max(2.5,fs/17);let s=seed0;const R=()=>(s=(s*16807)%2147483647)/2147483647;const P=[];
+  for(let y=0;y<mh;y+=step)for(let xx=0;xx<mw;xx+=step){const jx=xx+(R()-.5)*step,jy=y+(R()-.5)*step,i=((jy|0)*mw+(jx|0))*4;
+    if(jx>=0&&jy>=0&&jx<mw&&jy<mh&&d[i+3]>128)P.push({x:jx,y:jy,r:step*(1.05+R()*.75),sp:sprites[R()*sprites.length|0],a:.55+R()*.35});}
+  P.sort((a,b)=>a.y-b.y);
+  // puffs drawn without per-draw filters; one blur pass over the finished bitmap
+  for(const p of P){const r2=p.r*1.1;c.globalAlpha=p.a*.35;c.drawImage(p.sp,p.x-r2,p.y-r2+p.r*.35,r2*2,r2*2);}
+  for(const p of P){const r2=p.r*.9;c.globalAlpha=p.a;c.drawImage(p.sp,p.x-r2,p.y-r2,r2*2,r2*2);}
+  c.globalAlpha=1;const tmp=document.createElement('canvas');tmp.width=canvas.width;tmp.height=canvas.height;tmp.getContext('2d').drawImage(canvas,0,0);
+  c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,canvas.width,canvas.height);c.filter='blur(0.6px)';c.drawImage(tmp,0,0);c.filter='none';return true;}
+function build(){if(built)return;built=render(cv,7);if(built)setTimeout(()=>render(cv2,4242),1200);} // stagger 2nd variant
+let started=false;const start=()=>{if(started)return;started=true;(document.fonts?document.fonts.load('800 40px "Baloo 2"'):Promise.resolve()).finally(()=>{built=false;setTimeout(build,60);});};
+document.addEventListener('rift-open',start);if(document.getElementById('rift').classList.contains('open'))start();
+let rt=null;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(built){built=false;build();}},200);});
+// click sequence (only inside the opening)
 const h=document.getElementById('cae'),go=document.getElementById('go');
 h.innerHTML=[...'Create and Explore'].map(ch=>`<span>${ch===' '?'&nbsp;':ch}</span>`).join('');
 let played=false;
 function play(){if(played)return;played=true;scr.classList.add('played');
-  [...h.children].forEach((sp,i)=>setTimeout(()=>sp.classList.add('on'),i*55));
-  setTimeout(()=>go.classList.add('on'),18*55+350);}
-scr.addEventListener('click',e=>{if(e.target===go)return;play();});
+  [...h.children].forEach((sp,i)=>setTimeout(()=>sp.classList.add('on'),i*55));setTimeout(()=>go.classList.add('on'),18*55+350);}
+scr.addEventListener('click',e=>{if(e.target===go)return;if(window.RIFT_HIT&&!window.RIFT_HIT(e.clientX,e.clientY))return;play();});
 scr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();play();}});
 })();
