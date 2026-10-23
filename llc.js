@@ -33,8 +33,7 @@ async function drawIsland(){
   for(const c of IC.querySelectorAll('canvas[data-src]')){const im=await img(c.dataset.src);if(!im)continue;
     const cw=c.classList.contains('base')?IC.offsetWidth:parseFloat(getComputedStyle(c).width)||40;
     const W=Math.max(2,Math.round(cw/PX)),H=Math.max(2,Math.round(W*im.height/im.width));c.width=W;c.height=H;c.style.width=(W*PX)+'px';c.style.height=(H*PX)+'px';
-    const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(im,0,0,W,H);
-    const id=g.getImageData(0,0,W,H),d=id.data;for(let i=3;i<d.length;i+=4)d[i]=d[i]>110?255:0;g.putImageData(id,0,0);}
+    const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(im,0,0,W,H);}
   const du=IC.querySelector('.dust');du.width=Math.ceil(IC.offsetWidth/PX);du.height=Math.ceil(IC.offsetHeight/PX);
 }
 
@@ -77,27 +76,35 @@ function drawRift(){
   const maxD=Math.max(...cracks.map(p=>p[p.length-1].d));
   // dimensional hole behind the logo (dark void so the purple logo reads on the sky)
   const hole=[];{const n=40;for(let i=0;i<n;i++){const a=i/n*Math.PI*2,k=.86+rnd()*.28;hole.push([cx+Math.cos(a)*lw*.56*k,cy+Math.sin(a)*lh*.66*k]);}}
-  const layer=(g,lim,pad,col,alpha)=>{g.fillStyle=g.strokeStyle=col;g.globalAlpha=alpha;g.lineCap=g.lineJoin='round';
-    g.beginPath();hole.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();if(pad>0){g.lineWidth=pad*2.4;g.stroke();}
-    for(const p of cracks)for(let i=1;i<p.length;i++){const a=p[i-1],q=p[i];if(q.d>lim)break;g.lineWidth=q.w+pad*2;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(q.x,q.y);g.stroke();}
-    g.globalAlpha=1;};
-  const bin=(g)=>{const id=g.getImageData(0,0,W,H),d=id.data;for(let i=3;i<d.length;i+=4)d[i]=d[i]>90?255:0;g.putImageData(id,0,0);};
-  stages=[];
-  for(let s=1;s<=4;s++){const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d'),lim=maxD*s/4;
-    layer(g,lim,2.4,'#c33cff',1);layer(g,lim,1.4,'#ff6ee6',1);layer(g,lim,.7,'#ffffff',1);bin(g);
-    g.globalCompositeOperation='source-over';layer(g,lim,0,'#0a0316',1);bin(g);
-    // nebula + stars in the void (only where void pixels are)
-    const id=g.getImageData(0,0,W,H),d=id.data,r2=rng(5);
-    for(let i=0;i<d.length;i+=4){if(d[i]===10&&d[i+1]===3&&d[i+2]===22){const x=(i/4)%W,y=(i/4)/W|0,n=Math.sin(x*.21+y*.13)+Math.sin(x*.07-y*.19)+Math.sin((x+y)*.05);
-      if(n>1.2&&(B4[y&3][x&3])<8){d[i]=58;d[i+1]=18;d[i+2]=92;}else if(n>.6&&(B4[y&3][x&3])<4){d[i]=34;d[i+1]=10;d[i+2]=66;}
-      if(r2()<.012){d[i]=255;d[i+1]=240;d[i+2]=255;}}}
+  // software raster: L[] holds a layer id per pixel; later (inner) layers overwrite outer ones
+  const N=W*H;
+  function disc(L,x,y,r,v){const x0=Math.max(0,Math.floor(x-r)),x1=Math.min(W-1,Math.ceil(x+r)),y0=Math.max(0,Math.floor(y-r)),y1=Math.min(H-1,Math.ceil(y+r)),rr=r*r;
+    for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++){const dx=xx+.5-x,dy=yy+.5-y;if(dx*dx+dy*dy<=rr&&L[yy*W+xx]<v)L[yy*W+xx]=v;}}
+  function seg(L,a,q,pad,v){const n=Math.max(1,Math.ceil(Math.hypot(q.x-a.x,q.y-a.y)));for(let i=0;i<=n;i++){const t=i/n;disc(L,a.x+(q.x-a.x)*t,a.y+(q.y-a.y)*t,(a.w+(q.w-a.w)*t)/2+pad,v);}}
+  function poly(L,pts,v){let y0=H,y1=0;for(const p of pts){y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1]);}
+    for(let y=Math.max(0,y0|0);y<=Math.min(H-1,y1|0);y++){const xs=[];for(let i=0;i<pts.length;i++){const [ax,ay]=pts[i],[bx,by]=pts[(i+1)%pts.length];if((ay<=y+.5)!==(by<=y+.5))xs.push(ax+(y+.5-ay)/(by-ay)*(bx-ax));}
+      xs.sort((p,q)=>p-q);for(let k=0;k+1<xs.length;k+=2)for(let x=Math.max(0,Math.ceil(xs[k]-.5));x<=Math.min(W-1,Math.floor(xs[k+1]-.5));x++)if(L[y*W+x]<v)L[y*W+x]=v;}}
+  function paint(L,lim,pads){ // pads: [[pad,value],...] outer->inner
+    for(const [pad,v] of pads){
+      if(pad>=0&&v>=0){const grow=pad;const hp=hole.map(([x,y])=>{const dx=x-cx,dy=y-cy,l=Math.hypot(dx,dy)||1;return[x+dx/l*grow,y+dy/l*grow];});poly(L,hp,v);}
+      for(const p of cracks)for(let i=1;i<p.length;i++){if(p[i].d>lim)break;seg(L,p[i-1],p[i],pad,v);}}}
+  const PAL={1:[176,64,255],2:[195,60,255],3:[255,110,230],4:[255,255,255]};
+  stages=[];const r2=rng(5),starMask=new Uint8Array(N);for(let i=0;i<N;i++)starMask[i]=r2()<.012?1:0;
+  for(let s=1;s<=4;s++){const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d'),lim=maxD*s/4,Lb=new Uint8Array(N);
+    paint(Lb,lim,[[2.4,2],[1.4,3],[.7,4],[0,5]]);
+    const id=g.createImageData(W,H),d=id.data;
+    for(let i=0;i<N;i++){const v=Lb[i];if(!v)continue;const o=i*4;d[o+3]=255;
+      if(v===5){const x=i%W,y=i/W|0,n=Math.sin(x*.21+y*.13)+Math.sin(x*.07-y*.19)+Math.sin((x+y)*.05);let c3=[10,3,22];
+        if(n>1.2&&B4[y&3][x&3]<8)c3=[58,18,92];else if(n>.6&&B4[y&3][x&3]<4)c3=[34,10,66];if(starMask[i])c3=[255,240,255];d[o]=c3[0];d[o+1]=c3[1];d[o+2]=c3[2];}
+      else{const c3=PAL[v];d[o]=c3[0];d[o+1]=c3[1];d[o+2]=c3[2];}}
     g.putImageData(id,0,0);stages.push(c);}
   // pixel glow (dithered halo), pulses via CSS opacity
-  {const g=RG.getContext('2d');layer(g,maxD,7,'#b040ff',1);const id=g.getImageData(0,0,W,H),d=id.data;
-   for(let i=0;i<d.length;i+=4){const x=(i/4)%W,y=(i/4)/W|0;d[i+3]=d[i+3]>40&&B4[y&3][x&3]<6?200:0;}g.putImageData(id,0,0);}
+  {const Lg=new Uint8Array(N);paint(Lg,maxD,[[7,1]]);const g=RG.getContext('2d'),id=g.createImageData(W,H),d=id.data;
+   for(let i=0;i<N;i++){const x=i%W,y=i/W|0;if(Lg[i]&&B4[y&3][x&3]<6){const o=i*4;d[o]=176;d[o+1]=64;d[o+2]=255;d[o+3]=200;}}g.putImageData(id,0,0);}
   // crack fragments over card corners (above the cards)
-  {const g=RX.getContext('2d');for(const c of cardsAt){for(const [sx,sy] of [[-1,-1],[1,1]]){const x=c.x+sx*c.w/2,y=c.y-c.h*.0+sy*c.h*.45;
-      const p=crackPath(rnd,x-sx*6,y-sy*5,x+sx*5,y+sy*4,1.6,.3);for(const [pad,col] of [[1.2,'#ff6ee6'],[.5,'#fff'],[0,'#0a0316']]){g.strokeStyle=col;g.lineCap='round';for(let i=1;i<p.length;i++){g.lineWidth=p[i].w+pad*2;g.beginPath();g.moveTo(p[i-1].x,p[i-1].y);g.lineTo(p[i].x,p[i].y);g.stroke();}}}}bin(g);}
+  {const Lf=new Uint8Array(N);for(const c of cardsAt){for(const [sx,sy] of [[-1,-1],[1,1]]){const x=c.x+sx*c.w/2,y=c.y+sy*c.h*.45;
+      const p=crackPath(rnd,x-sx*6,y-sy*5,x+sx*5,y+sy*4,1.6,.3);for(const [pad,v] of [[1.2,3],[.5,4],[0,5]])for(let i=1;i<p.length;i++)seg(Lf,p[i-1],p[i],pad,v);}}
+   const g=RX.getContext('2d'),id=g.createImageData(W,H),d=id.data;for(let i=0;i<N;i++){const v=Lf[i];if(!v)continue;const c3=v===5?[10,3,22]:PAL[v],o=i*4;d[o]=c3[0];d[o+1]=c3[1];d[o+2]=c3[2];d[o+3]=255;}g.putImageData(id,0,0);}
   // shards near crack points
   SH.innerHTML='';const all=cracks.flat();for(let i=0;i<16;i++){const q=all[(rnd()*all.length)|0],e=document.createElement('i');
     e.style.cssText=`left:${(q.x*PX).toFixed(0)}px;top:${(q.y*PX).toFixed(0)}px;--s:${PX*(1+(rnd()<.4))}px;--c:${['#fff','#ff6ee6','#c33cff'][i%3]};--d:${(2+rnd()*2).toFixed(1)}s;--dl:-${(rnd()*3).toFixed(1)}s;--dx:${((rnd()-.5)*80).toFixed(0)}px;--dy:${((rnd()-.5)*80).toFixed(0)}px`;SH.appendChild(e);}
@@ -110,7 +117,7 @@ function setStage(s){stage=s;const g=RF.getContext('2d');g.clearRect(0,0,RF.widt
   L.classList.remove('shk');FL.classList.remove('go');void L.offsetWidth;L.classList.add('shk');FL.classList.add('go');
   if(s===3)setTimeout(()=>L.classList.add('done'),300);}
 
-function layout(){PX=getPX();drawSky();drawIsland();drawRift();}
+function layout(){PX=getPX();for(const f of [drawSky,drawIsland,drawRift]){try{const p=f();if(p&&p.catch)p.catch(e=>console.warn(e));}catch(e){console.warn('llc layout step failed',e);if(f===drawRift){L.classList.add('fail','in','done');}}}}
 let la=null,lb=null;
 (window.FFC_HOOKS=window.FFC_HOOKS||[]).push(dt=>{
   if(!ready)return;

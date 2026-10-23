@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html class="nojs" lang="en">
+<head><script>document.documentElement.classList.remove("nojs")</script>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=900">
 <title>FFC</title>
 <link rel="icon" href="data:,">
 <style>
 html,body{margin:0;background:#07060d;overflow-x:hidden}
-:root{--ce:calc(400vh + max(100vh,560px));--th:max(74vh,500px);--ic:calc(100vw * 470 / 480 + 20px);--ih:calc(var(--ic) * 2.5);--lh:max(130vh,1000px)}
+:root{--u:min(1vh,.5625vw);--ce:calc(calc(400 * var(--u)) + max(calc(100 * var(--u)),560px));--th:max(calc(74 * var(--u)),500px);--ic:calc(100vw * 470 / 480 + 20px);--ih:calc(var(--ic) * 2.5);--lh:max(calc(130 * var(--u)),1000px)}
 body{height:calc(var(--ce) + 900px + var(--th) + var(--ih) + var(--lh))}
 #hint{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);color:#fff;font:500 13px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.12em;text-transform:lowercase;text-align:center;opacity:0;transition:opacity .6s ease;pointer-events:none;user-select:none}
 #hint svg{display:block;margin:6px auto 0;animation:bob 1.6s ease-in-out infinite}
@@ -18,7 +18,7 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 #hint{z-index:3}
 #sub{position:absolute;left:50%;transform:translateX(-50%);height:auto;image-rendering:pixelated;z-index:3;pointer-events:none;opacity:0;clip-path:inset(0 50% 0 50%);transition:opacity .4s steps(4),clip-path .7s steps(14)}
 #sub.on{opacity:1;clip-path:inset(0 0 0 0)}
-#scene{position:absolute;left:0;top:170vh;width:100%;height:min(92vh,66.6vw);overflow:hidden;z-index:1;-webkit-mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.25) 6%,rgba(0,0,0,.7) 13%,#000 21%,#000 79%,rgba(0,0,0,.7) 87%,rgba(0,0,0,.25) 94%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.25) 6%,rgba(0,0,0,.7) 13%,#000 21%,#000 79%,rgba(0,0,0,.7) 87%,rgba(0,0,0,.25) 94%,transparent 100%)}
+#scene{position:absolute;left:0;top:calc(170 * var(--u));width:100%;height:min(calc(92 * var(--u)),66.6vw);overflow:hidden;z-index:1;-webkit-mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.25) 6%,rgba(0,0,0,.7) 13%,#000 21%,#000 79%,rgba(0,0,0,.7) 87%,rgba(0,0,0,.25) 94%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.25) 6%,rgba(0,0,0,.7) 13%,#000 21%,#000 79%,rgba(0,0,0,.7) 87%,rgba(0,0,0,.25) 94%,transparent 100%)}
 /* pixel-style dithered band over the fades (static, cached by the compositor) */
 #scene::before,#scene::after{content:'';position:absolute;left:0;right:0;height:14%;z-index:5;pointer-events:none;image-rendering:pixelated;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%2307060d'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%2307060d'/%3E%3C/svg%3E");background-size:4px 4px;opacity:.55}
 #scene::before{top:3%}#scene::after{bottom:3%}
@@ -53,7 +53,7 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 .clickhint{position:absolute;left:50%;transform:translateX(-50%);bottom:24%;color:#fff;font:600 12px/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:lowercase;text-shadow:0 1px 3px rgba(0,0,0,.6);opacity:.8;animation:hp 1.6s ease-in-out infinite;pointer-events:none}
 @keyframes hp{0%,100%{opacity:.35}50%{opacity:.9}}
 
-#sticky{position:absolute;left:0;top:290vh;width:100%;height:max(100vh,560px);overflow:hidden;z-index:1;font-family:"Patrick Hand",cursive}
+#sticky{position:absolute;left:0;top:calc(290 * var(--u));width:100%;height:max(calc(100 * var(--u)),560px);overflow:hidden;z-index:1;font-family:"Patrick Hand",cursive}
 #sboard{position:absolute;inset:0;background-color:#fff;background-image:radial-gradient(#e7e5e4 1.3px,transparent 1.3px);background-size:28px 28px;opacity:0;transition:opacity .25s}
 
 #splat{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;image-rendering:auto}
@@ -76,7 +76,7 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 #tttr{border:0;border-radius:6px;background:#1c1917;color:#fffef8;font:600 12px Figtree,sans-serif;padding:4px 8px;cursor:pointer}
 a.sblink{display:block;text-decoration:none;cursor:pointer;text-align:center}
 a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8px;background:#1c1917;color:#fffef8;font:700 14px Figtree,sans-serif}
-@media (max-width:760px){.hide-sm{display:none}}
+
 #doodle{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;overflow:visible}
 #doodle path{fill:none;stroke:#1c1917;stroke-linecap:round;stroke-linejoin:round}
 #sextras{z-index:4}#sword{z-index:5}.mouse{z-index:6}
@@ -85,7 +85,7 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 .marker .pen{position:absolute;left:8px;top:8px;width:7px;height:34px;border-radius:3px 3px 1px 1px;background:linear-gradient(#1c1917 0 18%,#e11d48 18% 82%,#1c1917 82%);transform:rotate(-35deg);transform-origin:50% 0}
 
 
-#casino{position:absolute;left:0;top:400vh;width:100%;height:max(100vh,560px);overflow:hidden;z-index:1;color:#fff;font-family:"Times New Roman",Georgia,serif;
+#casino{position:absolute;left:0;top:calc(400 * var(--u));width:100%;height:max(calc(100 * var(--u)),560px);overflow:hidden;z-index:1;color:#fff;font-family:"Times New Roman",Georgia,serif;
  background:#141414;-webkit-mask-image:linear-gradient(to bottom,transparent,#000 12%,#000 90%,transparent);mask-image:linear-gradient(to bottom,transparent,#000 12%,#000 90%,transparent)}
 #rfx{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none;z-index:2}
 #rdark{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .5s;pointer-events:none;z-index:1}
@@ -97,7 +97,7 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #casino.reveal #rroll{opacity:0;transition:opacity .2s}
 #rres{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;z-index:4;opacity:0;pointer-events:none;width:94%;font-family:"Press Start 2P",monospace}
 #casino.done #rres{opacity:1;pointer-events:auto}
-#rres .tm{position:relative;margin:10px auto 8px;width:min(100%,calc((100svh - 250px)*2),940px);aspect-ratio:2/1}
+#rres .tm{position:relative;margin:10px auto 8px;width:min(100%,calc((calc(100 * var(--u)) - 250px)*2),940px);aspect-ratio:2/1}
 #rres .tm>img,#rres .tm .sp{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none;will-change:transform}
 #rres .colL,#rres .colR,#rres .steps{transform:translateY(140vh)}#rres .ped{transform:translateY(-140vh)}#rres .quartz{opacity:0}
 #rres .sp b{position:absolute;width:2.2%;aspect-ratio:1;background:url(px/spark.png?v=3399ee1e) 0 0/100% 100%;image-rendering:pixelated;transform:scale(0);animation:tw 1.6s steps(4) infinite}
@@ -130,7 +130,7 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 @keyframes hb{50%{opacity:.3}}
 #rres #ragain{display:inline-block;text-decoration:none;margin-top:12px;padding:10px 14px;border:0;box-shadow:0 0 0 3px #1a0c00,inset -3px -3px 0 #8a5600,inset 3px 3px 0 #fff3b0;background:#ffd44a;color:#1a0c00;font:12px "Press Start 2P",monospace;cursor:pointer}
 #rres #ragain:hover{background:#ffe68a}#rres #ragain:active{transform:translateY(2px)}
-#tree{position:absolute;left:0;top:calc(var(--ce) + 900px);width:100%;height:max(74vh,500px);overflow:hidden;z-index:1;background:transparent;font-family:"Press Start 2P",monospace;color:#fff;
+#tree{position:absolute;left:0;top:calc(var(--ce) + 900px);width:100%;height:max(calc(74 * var(--u)),500px);overflow:hidden;z-index:1;background:transparent;font-family:"Press Start 2P",monospace;color:#fff;
 }
 #tgnd{position:absolute;left:0;right:0;bottom:0;height:calc(32 * var(--tpx,4px));background:url(stock/ground-px.png?v=dcd7b0ba) 0 100%/auto 100% repeat-x;image-rendering:pixelated;z-index:2;pointer-events:none}
 #gh{position:absolute;left:50%;width:var(--sw,150px);aspect-ratio:64/85;margin-left:calc(var(--sw,150px) / -2);bottom:var(--sb,40px);z-index:1;opacity:0;transition:opacity .6s 2.4s;transform-origin:50% 100%;will-change:transform}
@@ -184,9 +184,9 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #llc.done .shards i{animation:shard var(--d) steps(12) infinite;animation-delay:var(--dl)}
 @keyframes shard{0%{opacity:0;transform:translate(0,0)}20%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy))}}
 #llc.idle .shards i,#llc.idle .riftg,#llc.idle .st .f{animation-play-state:paused}
-#llc .cards{position:absolute;inset:0;z-index:2}
-#llc .st{position:absolute;left:var(--x);top:var(--y);width:var(--cw);text-decoration:none;color:#fff;opacity:0;transform:rotate(var(--rot)) scale(.15);transition:opacity .25s,transform .7s cubic-bezier(.2,1.5,.4,1)}
-#llc .st.out{opacity:1;transform:rotate(var(--rot)) scale(1)}
+#llc .cards{position:absolute;inset:0;z-index:2}#llc.fail .st,html.nojs #llc .st{visibility:visible;opacity:1;transform:rotate(var(--rot))}
+#llc .st{position:absolute;visibility:hidden;left:var(--x);top:var(--y);width:var(--cw);text-decoration:none;color:#fff;opacity:0;transform:rotate(var(--rot)) scale(.15);transition:opacity .25s,transform .7s cubic-bezier(.2,1.5,.4,1)}
+#llc .st.out{visibility:visible;opacity:1;transform:rotate(var(--rot)) scale(1)}
 #llc .st .f{display:block;animation:trem 1.8s steps(1) infinite}
 @keyframes trem{0%{transform:none}25%{transform:translate(1px,0)}50%{transform:translate(0,1px)}75%{transform:translate(-1px,0)}}
 #llc .st .card{display:block;background:#12061f;border:3px solid #000;box-shadow:0 0 0 3px #e9c8ff,0 0 0 6px #000,0 0 18px 8px rgba(214,70,255,.75),0 0 46px 14px rgba(120,40,220,.55);line-height:0}
@@ -195,7 +195,6 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #llc .st .card.tx{line-height:1.5;padding:12px 10px;font-size:10px;text-align:left;background:#fff6ee;color:#160822}#llc .st .card.tx b{display:block;font-size:8px;color:#5a2596;margin-bottom:6px}
 #llc .st .cap{display:block;margin-top:12px;font-size:9px;line-height:1.5;text-align:center;text-shadow:2px 2px 0 #000,0 0 8px #000}
 #llc .st:hover .card,#llc .st:focus-visible .card{box-shadow:0 0 0 3px #fff,0 0 0 6px #000,0 0 26px 12px rgba(255,93,220,.9)}#llc .st:focus-visible{outline:none}
-@media (max-width:760px){:root{--lh:max(125vh,1040px)}#llc .core{width:88vw}#llc .st{left:var(--mx);top:var(--my);width:var(--mw)}#llc .st.nm{display:none}#llc .st .cap{font-size:7px}#llc .st .card.tx{font-size:8px;padding:8px 6px}#llc .st .card.tx b{font-size:6px}#llc .st .card.sp{padding:4px}}
 #tcv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
 #tmid{position:absolute;left:50%;top:33%;transform:translate(-50%,-50%);text-align:center;width:min(46%,620px);z-index:3;opacity:0;transition:opacity .8s 1.6s,transform .8s 1.6s}
 #tree.on #tmid{opacity:1;transform:translate(-50%,-56%)}
@@ -203,10 +202,9 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #tmid p{margin:14px 0 18px;font-size:clamp(9px,1vw,13px);line-height:1.6;color:#fff;text-shadow:2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000,2px 2px 0 #000,3px 3px 0 #000}
 #tmid a{display:inline-block;padding:12px 18px;background:#6aa43e;color:#0b1a08;text-decoration:none;font-size:clamp(11px,1.1vw,14px);box-shadow:0 0 0 3px #000,inset -3px -3px 0 #3d7a2c,inset 3px 3px 0 #b8e27a}
 #tmid a:hover,#tmid a:focus-visible{background:#86bf52;outline:none}
-@media (max-width:600px){#tmid{width:46%;top:27%}}
+
 </style>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=VT323&family=Baloo+2:wght@800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700&family=Patrick+Hand&family=Press+Start+2P&display=swap">
+<link rel="stylesheet" href="fonts/fonts.css?v=8fe0b7f8">
 </head>
 <body>
 <canvas id="c" aria-label="FFC"></canvas>
@@ -266,8 +264,10 @@ function resize(){
 addEventListener('resize',resize);
 function load(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
 function pixels(img){const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const x=c.getContext('2d');x.drawImage(img,0,0);return x.getImageData(0,0,img.width,img.height).data;}
+// Brave Shields etc. can block canvas readback: fall back to pre-baked RGBA (loaded only when needed)
+function bakedPixels(){return new Promise(r=>{const s=document.createElement('script');s.src='ffc-pix.js?v=05adf252';s.onload=()=>{const dec=b=>{const t=atob(b),u=new Uint8ClampedArray(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i);return u;};r([dec(FFC_PIX.sp.b),dec(FFC_PIX.or.b)]);};document.head.appendChild(s);});}
 Promise.all([load('ffc-sprite.png?v=fa14572e'),load('ffc-order.png?v=125da5d9')]).then(([sp,or])=>{
-  lw=sp.width;lh=sp.height;if(or.width!==lw||or.height!==lh)console.error('ffc-order size mismatch');const d=pixels(sp),o=pixels(or);
+  window.__ffcSp=sp;lw=sp.width;lh=sp.height;let d,o;try{d=pixels(sp);o=pixels(or);return [d,o];}catch(e){return bakedPixels();}}).then(([d,o])=>{
   for(let y=0;y<lh;y++)for(let x=0;x<lw;x++){const i=(y*lw+x)*4;if(!d[i+3])continue;
     const lay=Math.round(o[i]/30),t=o[i+1]/255,ci=Math.round(o[i+2]/60),r=d[i],g=d[i+1],b=d[i+2];
     if(lay===1){const a=Math.random()*6.28,rr=.55+Math.random()*.6;
@@ -280,7 +280,7 @@ Promise.all([load('ffc-sprite.png?v=fa14572e'),load('ffc-order.png?v=125da5d9')]
    chunks=[...m.values()];}
   logoC=document.createElement('canvas');logoC.width=lw;logoC.height=lh;logoX=logoC.getContext('2d');
   logoD=logoX.createImageData(lw,lh);buf=new Uint32Array(logoD.data.buffer);
-  full=document.createElement('canvas');full.width=lw;full.height=lh;full.getContext('2d').drawImage(sp,0,0);
+  full=document.createElement('canvas');full.width=lw;full.height=lh;full.getContext('2d').drawImage(window.__ffcSp,0,0);
   resize();ready=true;
 });
 requestAnimationFrame(frame);
@@ -422,7 +422,7 @@ function frame(ts){
   const f2=time-T_FIN;if(f2>=0&&f2<.8){const f=1-easeInOut(f2/.8);radialFlash(cx,cy,Math.min(W,H)*.5*(.5+f2*.7),f,1);
     ctx.globalAlpha=f;ctx.fillStyle='#fff';for(let k=0;k<48;k++){const a=k/48*6.283,r=f2*lw*.8*(0.7+0.3*((k*37)%10)/10);ctx.fillRect(Math.round(cx+Math.cos(a)*r),Math.round(cy+Math.sin(a)*r*.5),2,2);}ctx.globalAlpha=1;}
   updatePetals(dt);
-  for(const h of (window.FFC_HOOKS||[]))h(dt);
+  for(const h of (window.FFC_HOOKS||[])){try{h(dt);}catch(e){if(!h._e){h._e=1;console.warn("section hook failed",e);}}}
   requestAnimationFrame(frame);
 }
 })();
@@ -430,7 +430,7 @@ function frame(ts){
 <section id="scene" aria-label="Archive of Things">
   <canvas id="sl" aria-hidden="true"></canvas>
   <canvas id="sf" aria-hidden="true"></canvas>
-  <img id="sbg" src="https://rainbowroar14.github.io/PC/assets2/desktop-bg.png" crossorigin="anonymous" alt="">
+  <img id="sbg" src="ext/desktop-bg.png?v=73478734" crossorigin="anonymous" alt="">
   <div id="scr" role="button" tabindex="0" aria-label="Archive of Things: click to explore">
     <canvas id="clouds" aria-hidden="true"></canvas><canvas id="clouds2" aria-hidden="true"></canvas>
     <div id="cta"><h3 id="cae" aria-label="Create and Explore"></h3>
@@ -439,21 +439,21 @@ function frame(ts){
   </div>
   <div id="boot"><div class="bt">Starting Archive of Things...</div><div class="bar"><div id="bfill"></div></div></div>
 </section>
-<script src="scene.js?v=42fa01da"></script>
+<script src="scene.js?v=b938599b"></script>
 <section id="sticky" aria-label="Sticky Board">
   
   <canvas id="splat" aria-hidden="true"></canvas>
   <svg id="doodle" aria-hidden="true"></svg><div id="sextras">
-    <img class="meme" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/maxwell.png" alt="maxwell" style="left:17%;top:30%;--r:-8deg">
-    <img class="meme" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/doge.png" alt="doge" style="left:62%;top:74%;--r:7deg">
-    <img class="meme hide-sm" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/cheems.png" alt="cheems" style="left:37%;top:74%;--r:5deg">
-    <img class="meme" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/pog.png" alt="pog" style="left:70%;top:27%;--r:-4deg">
+    <img class="meme" src="ext/maxwell.png?v=13e07abb" alt="maxwell" style="left:17%;top:30%;--r:-8deg">
+    <img class="meme" src="ext/doge.png?v=86b2e692" alt="doge" style="left:62%;top:74%;--r:7deg">
+    <img class="meme hide-sm" src="ext/cheems.png?v=1594061f" alt="cheems" style="left:37%;top:74%;--r:5deg">
+    <img class="meme" src="ext/pog.png?v=fff70b08" alt="pog" style="left:70%;top:27%;--r:-4deg">
     <div class="tnote" style="left:15%;top:76%;--r:3deg;background:#B8F2E6;width:clamp(120px,13vw,160px)"><div>Tic-tac-toe</div><div id="ttt"><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button></div><div class="trow"><span id="tttst">X to move</span><button id="tttr">Reset</button></div></div>
     <div class="tnote hide-sm" style="left:37%;top:21%;--r:-3deg;background:#FFD6A5">stick a note, any note :)</div>
     <div class="tnote hide-sm" style="left:57%;top:19%;--r:2deg;background:#CDB4DB">hi from the wall 👋</div>
     <a class="tnote sblink" href="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/" target="_blank" rel="noopener" style="left:82%;top:66%;--r:4deg;background:#FFE566">Come stick a note!<br><b>Open Sticky Board →</b></a>
   </div>
-  <div id="sword"></div><div class="cards"><a class="st" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:6%;--y:8%;--cw:min(12vw,160px);--rot:-8deg;--mx:4%;--my:10%;--mw:30vw"><span class="f"><span class="card sp"><img src="llc/ashaad.png?v=59016f9e" alt="Ashaad"></span><span class="cap">The Binding<br>of Ashaad</span></span></a><a class="st" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:77%;--y:6%;--cw:min(17vw,240px);--rot:7deg;--mx:56%;--my:8%;--mw:40vw"><span class="f"><span class="card "><img src="llc/ashaad-shot-px.png?v=11b51fbe" alt="The Binding of Ashaad title screen"></span><span class="cap">a brainrot roguelike</span></span></a><a class="st nm" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:4%;--y:50%;--cw:min(11vw,140px);--rot:6deg"><span class="f"><span class="card sp"><img src="llc/finley.png?v=ab2d538a" alt="Finley, secret boss"></span><span class="cap">secret boss: Finley</span></span></a><a class="st nm" href="https://landrcy.github.io/#ballfight" target="_blank" rel="noopener" style="--x:80%;--y:48%;--cw:min(16vw,230px);--rot:-6deg"><span class="f"><span class="card "><img src="llc/ballfight-px.png?v=e962b0a8" alt="Eternal Ball Fight arena"></span><span class="cap">Eternal Ball Fight</span></span></a><a class="st" href="https://coopercitywebsites.github.io/main/" target="_blank" rel="noopener" style="--x:13%;--y:79%;--cw:min(15vw,200px);--rot:-5deg;--mx:3%;--my:74%;--mw:40vw"><span class="f"><span class="card tx"><b>UNBLOCKED · VERY COMPLEX</b>Night Arena</span></span></a><a class="st" href="https://coopercitywebsites.github.io/main/" target="_blank" rel="noopener" style="--x:45%;--y:81%;--cw:min(10vw,130px);--rot:4deg;--mx:38%;--my:87%;--mw:24vw"><span class="f"><span class="card sp"><img src="llc/gow-cd-px.png?v=31de19e0" alt="Game of Websites disc"></span><span class="cap">Game of Websites</span></span></a><a class="st" href="https://coopercitywebsites.github.io/main/" target="_blank" rel="noopener" style="--x:69%;--y:78%;--cw:min(15vw,200px);--rot:6deg;--mx:57%;--my:73%;--mw:40vw"><span class="f"><span class="card tx"><b>PROJECT · COMPLEX</b>Archive of Things</span></span></a><a class="st nm" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:31%;--y:6%;--cw:min(8vw,100px);--rot:10deg"><span class="f"><span class="card sp"><img src="llc/emmanuel.png?v=155e4539" alt="Emmanuel"></span><span class="cap">Emmanuel</span></span></a></div><canvas class="riftfx" aria-hidden="true"></canvas>
+  <div id="sword"></div>
 </section>
 <section id="casino" aria-label="RNG: Test Your Luck">
   <div id="rdark"></div><canvas id="rfx" aria-hidden="true"></canvas>
@@ -473,8 +473,8 @@ function frame(ts){
 </div>
 <div class="cards"><a class="st" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:6%;--y:8%;--cw:min(12vw,160px);--rot:-8deg;--mx:4%;--my:10%;--mw:30vw"><span class="f"><span class="card sp"><img src="llc/ashaad.png?v=59016f9e" alt="Ashaad"></span><span class="cap">The Binding<br>of Ashaad</span></span></a><a class="st" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:77%;--y:6%;--cw:min(17vw,240px);--rot:7deg;--mx:56%;--my:8%;--mw:40vw"><span class="f"><span class="card "><img src="llc/ashaad-shot-px.png?v=11b51fbe" alt="The Binding of Ashaad title screen"></span><span class="cap">a brainrot roguelike</span></span></a><a class="st nm" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:4%;--y:50%;--cw:min(11vw,140px);--rot:6deg"><span class="f"><span class="card sp"><img src="llc/finley.png?v=ab2d538a" alt="Finley, secret boss"></span><span class="cap">secret boss: Finley</span></span></a><a class="st nm" href="https://landrcy.github.io/#ballfight" target="_blank" rel="noopener" style="--x:80%;--y:48%;--cw:min(16vw,230px);--rot:-6deg"><span class="f"><span class="card "><img src="llc/ballfight-px.png?v=e962b0a8" alt="Eternal Ball Fight arena"></span><span class="cap">Eternal Ball Fight</span></span></a><a class="st" href="https://coopercitywebsites.github.io/main/" target="_blank" rel="noopener" style="--x:13%;--y:79%;--cw:min(15vw,200px);--rot:-5deg;--mx:3%;--my:74%;--mw:40vw"><span class="f"><span class="card tx"><b>UNBLOCKED · VERY COMPLEX</b>Night Arena</span></span></a><a class="st" href="https://coopercitywebsites.github.io/main/" target="_blank" rel="noopener" style="--x:45%;--y:81%;--cw:min(10vw,130px);--rot:4deg;--mx:38%;--my:87%;--mw:24vw"><span class="f"><span class="card sp"><img src="llc/gow-cd-px.png?v=31de19e0" alt="Game of Websites disc"></span><span class="cap">Game of Websites</span></span></a><a class="st" href="https://coopercitywebsites.github.io/main/" target="_blank" rel="noopener" style="--x:69%;--y:78%;--cw:min(15vw,200px);--rot:6deg;--mx:57%;--my:73%;--mw:40vw"><span class="f"><span class="card tx"><b>PROJECT · COMPLEX</b>Archive of Things</span></span></a><a class="st nm" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:31%;--y:6%;--cw:min(8vw,100px);--rot:10deg"><span class="f"><span class="card sp"><img src="llc/emmanuel.png?v=155e4539" alt="Emmanuel"></span><span class="cap">Emmanuel</span></span></a></div><canvas class="riftfx" aria-hidden="true"></canvas>
 </section>
-<script src="llc.js?v=ff201580"></script>
-<script src="tree.js?v=2c393082"></script>
+<script src="llc.js?v=b17b59ec"></script>
+<script src="tree.js?v=3297c8e5"></script>
 <script src="casino.js?v=91c43599"></script>
 <script src="sticky.js?v=e4b5ada3"></script>
 

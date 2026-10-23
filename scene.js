@@ -29,7 +29,7 @@ function drawLines(upTo){ // draw only the newly reached part of the path
 function prepSrc(){src=document.createElement('canvas');src.width=sf.width;src.height=sf.height;const c=src.getContext('2d');
   const sc=Math.max(src.width/img.naturalWidth,src.height/img.naturalHeight);
   c.drawImage(img,(src.width-img.naturalWidth*sc)/2,(src.height-img.naturalHeight*sc)/2,img.naturalWidth*sc,img.naturalHeight*sc);
-  src=c.getImageData(0,0,src.width,src.height);}
+  try{src=c.getImageData(0,0,src.width,src.height);}catch(e){src=c.createImageData(src.width,src.height);}}
 function ditherStep(k){ // Win95-ish: ordered-dither reveal + coarse palette early on
   if(!src)prepSrc();const w=sf.width,h=sf.height,out=fc.createImageData(w,h),d=out.data,s=src.data,th=k/STEPS*16;
   const lv=k<3?2:k<5?4:k<7?8:256,q=255/(lv-1);
@@ -72,7 +72,7 @@ function render(canvas,seed0){
   let fs=Math.min(mh*.17,mw*.085);x.font=`800 ${fs}px "Baloo 2", system-ui, sans-serif`;
   while(x.measureText(TEXT).width>mw*.6){fs*=.95;x.font=`800 ${fs}px "Baloo 2", system-ui, sans-serif`;}
   x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';x.fillText(TEXT,mw/2,mh*.25);
-  const d=x.getImageData(0,0,mw,mh).data,step=Math.max(2.5,fs/17);let s=seed0;const R=()=>(s=(s*16807)%2147483647)/2147483647;const P=[];
+  let d;try{d=x.getImageData(0,0,mw,mh).data;}catch(e){d=new Uint8ClampedArray(mw*mh*4);}const step=Math.max(2.5,fs/17);let s=seed0;const R=()=>(s=(s*16807)%2147483647)/2147483647;const P=[];
   for(let y=0;y<mh;y+=step)for(let xx=0;xx<mw;xx+=step){const jx=xx+(R()-.5)*step,jy=y+(R()-.5)*step,i=((jy|0)*mw+(jx|0))*4;
     if(jx>=0&&jy>=0&&jx<mw&&jy<mh&&d[i+3]>128)P.push({x:jx,y:jy,r:step*(1.05+R()*.75),sp:sprites[R()*sprites.length|0],a:.55+R()*.35});}
   P.sort((a,b)=>a.y-b.y);
