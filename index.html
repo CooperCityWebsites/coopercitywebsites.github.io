@@ -1,80 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Game of Websites</title>
-  <meta name="description" content="Every website hosted on rainbowroar14.github.io.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231a1612'/%3E%3Cpath d='M8 22V10h2.2l3.3 7.2L16.8 10H19v12h-1.8v-7.6L14.2 22h-1.6l-3-7.6V22H8z' fill='%23f3ecdf'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FFC</title>
+<link rel="icon" href="data:,">
+<style>
+html,body{margin:0;height:100%;background:#07060d;overflow:hidden}
+canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+</style>
 </head>
 <body>
-  <header class="mast">
-    <img class="ffc-logo" src="ffc-logo.png" alt="FFC" width="1080" height="320" style="display:block;max-width:min(100%,540px);height:auto;margin:0 0 12px;image-rendering:pixelated">
-    <p class="kicker" id="kicker">rainbowroar14.github.io</p>
-    <h1>Game of Websites</h1>
-    <div class="tabs" id="tabs" role="tablist" aria-label="Sections">
-      <button type="button" role="tab" id="tab-sites" data-tab="sites" aria-selected="true">Unblocked</button>
-      <button type="button" role="tab" id="tab-mods" data-tab="mods" aria-selected="false">1.21.1 NeoForge</button>
-      <button type="button" role="tab" id="tab-old" data-tab="old" aria-selected="false">Old</button>
-      <button type="button" role="tab" id="tab-trash" data-tab="trash" aria-selected="false">Trash</button>
-    </div>
-    <p class="lede" id="lede">Complexity comes from non-blank lines of source code in each repo. Simple is under 1,000. Moderate is under 4,000. Complex is under 10,000. Very complex is 10,000 or more.</p>
-    <form class="tools" role="search" onsubmit="return false">
-      <label class="search">
-        <span class="sr" id="search-label">Search sites</span>
-        <input id="search" type="search" placeholder="Search by name or title" autocomplete="off">
-      </label>
-      <div class="filters sorts" data-for="sites" role="group" aria-label="Sort sites">
-        <button type="button" data-sort="lines" aria-pressed="true">Most code</button>
-        <button type="button" data-sort="updated" aria-pressed="false">Newest</button>
-      </div>
-      <div class="filters sorts" data-for="mods" role="group" aria-label="Sort mods" hidden>
-        <button type="button" data-sort="name" aria-pressed="true">Name</button>
-        <button type="button" data-sort="size" aria-pressed="false">Largest</button>
-      </div>
-    </form>
-    <p id="count" class="count" aria-live="polite">Loading sites…</p>
-  </header>
-  <main>
-    <ul id="list" class="list"></ul>
-    <p id="empty" class="empty" hidden>No sites match that search.</p>
-  </main>
-  <aside class="dock" id="dock">
-    <button type="button" class="disc" id="play" aria-label="Play" aria-pressed="false">
-      <img src="cd.png" alt="">
-    </button>
-    <div class="now">
-      <p class="song" id="song-title">Morning</p>
-      <p class="song-by">Kevin MacLeod · incompetech.com</p>
-      <p class="song-time"><span id="song-now">0:00</span><span id="song-end">0:00</span></p>
-      <label class="seek">
-        <span class="sr">How far into the song</span>
-        <input id="seek" type="range" min="0" max="1000" value="0">
-      </label>
-      <button type="button" id="mute" aria-pressed="false">Mute</button>
-    </div>
-    <audio id="song" preload="metadata"></audio>
-  </aside>
-  <button type="button" id="sim-toggle" aria-pressed="false">Constant simulation</button>
-  <div id="sim" hidden>
-    <canvas id="balls"></canvas>
-    <div class="swirls" aria-hidden="true">
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
-    <div id="dvds"></div>
-    <div id="runners"></div>
-    <img id="corner-skeleton" src="skeleton-dance.gif" alt="">
-    <div id="popups"></div>
-    <section id="runner-pop" aria-label="Gameplay">
-      <p class="pop-title">Gameplay <button type="button" class="pop-close" id="close-game">Close</button></p>
-      <canvas id="runner" width="280" height="420"></canvas>
-    </section>
-  </div>
-  <script src="main.js"></script>
-  <script src="player.js"></script>
-  <script src="sim.js"></script>
+<canvas id="c" aria-label="FFC"></canvas>
+<script>
+(()=>{
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let PX=1,W,H,stars=[],shoot=[],lw=0,lh=0,ox=0,oy=0,ready=false;
+let time=0,last=null,nextShoot=1.2;
+// sprite geometry (sprite px = base*2)
+const S=2,FX0=98*S,FX1=262*S,FY0=38*S,FY1=112*S,CX=180*S,CY=75*S,HW=(FX1-FX0)/2,HH=(FY1-FY0)/2,UC=HW/(HW+HH);
+const CORN=[[FX0,FY0],[FX1,FY0],[FX0,FY1],[FX1,FY1]];
+// timeline (seconds)
+const T_LET=2.2, T_FLASH1=2.25, T_FAN=2.55, T_EDGE=2.75, D_EDGE=1.7, T_BR=4.6, D_BR=1.45, T_FIN=6.2;
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const easeOutQuint=t=>1-Math.pow(1-t,5), easeOutBack=t=>{const c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);};
+const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, easeOutCubic=t=>1-Math.pow(1-t,3);
+let letters=[],others=[],logoC,logoX,logoD,buf,full;
+function resize(){
+  const lwv=lw||720,lhv=lh||300;
+  const p=Math.min(innerWidth*.95/lwv,innerHeight*.6/lhv);PX=p>=1?Math.min(6,Math.floor(p)):(p>=.5?.5:1/3);
+  W=Math.ceil(innerWidth/PX);H=Math.ceil(innerHeight/PX);cv.width=W;cv.height=H;
+  const n=Math.round(W*H/120*Math.min(1,PX*PX/4));stars=[];
+  for(let i=0;i<n;i++)stars.push({x:Math.random()*W,y:Math.random()*H,p:Math.random()*6.28,s:.6+Math.random()*2,v:.3+Math.random()*1.5,big:Math.random()<.06});
+  ox=Math.round((W-lw)/2);oy=Math.round((H-lh)/2);
+}
+addEventListener('resize',resize);
+function load(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
+function pixels(img){const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const x=c.getContext('2d');x.drawImage(img,0,0);return x.getImageData(0,0,img.width,img.height).data;}
+Promise.all([load('ffc-sprite.png'),load('ffc-order.png')]).then(([sp,or])=>{
+  lw=sp.width;lh=sp.height;const d=pixels(sp),o=pixels(or);
+  for(let y=0;y<lh;y++)for(let x=0;x<lw;x++){const i=(y*lw+x)*4;if(!d[i+3])continue;
+    const lay=Math.round(o[i]/30),t=o[i+1]/255,ci=Math.round(o[i+2]/60),r=d[i],g=d[i+1],b=d[i+2];
+    if(lay===1){const a=Math.random()*6.28,rr=.55+Math.random()*.6;
+      letters.push({x,y,r,g,b,c:`rgb(${r},${g},${b})`,sx:Math.cos(a)*rr,sy:Math.sin(a)*rr,delay:Math.random()*.3+(x/lw)*.2,sw:(Math.random()-.5)*.6});}
+    else others.push({x,y,r,g,b,lay,t,ci,j:Math.random()});
+  }
+  logoC=document.createElement('canvas');logoC.width=lw;logoC.height=lh;logoX=logoC.getContext('2d');
+  logoD=logoX.createImageData(lw,lh);buf=new Uint32Array(logoD.data.buffer);
+  full=document.createElement('canvas');full.width=lw;full.height=lh;full.getContext('2d').drawImage(sp,0,0);
+  resize();ready=true;
+});
+requestAnimationFrame(frame);
+function px32(x,y,r,g,b){if(x<0||y<0||x>=lw||y>=lh)return;buf[y*lw+x]=(255<<24)|(b<<16)|(g<<8)|r;}
+function hot(p,age,r0,g0,b0){ // trailing light: freshly revealed pixels glow white-hot then cool
+  const k=age<.45?1-age/.45:0, kk=k*k;return [r0+(255-r0)*kk|0,g0+(250-g0)*kk|0,b0+(225-b0)*kk|0];}
+function edgeU(){return easeInOut(clamp((time-T_EDGE)/D_EDGE));}
+function uTime(u){ // inverse of edgeU (numerical) -> time a path param is reached
+  let lo=0,hi=1;for(let k=0;k<18;k++){const m=(lo+hi)/2;if(easeInOut(m)<u)lo=m;else hi=m;}return T_EDGE+lo*D_EDGE;}
+const T_CORNER=()=>uTime(UC);
+function headPos(u){ // 8 spark heads along the frame path
+  if(u<=UC){const dx=u/UC*HW;return [[CX-dx,FY0],[CX+dx,FY0],[CX-dx,FY1],[CX+dx,FY1]];}
+  const dy=(u-UC)/(1-UC)*HH;return [[FX0,FY0+dy],[FX1,FY0+dy],[FX0,FY1-dy],[FX1,FY1-dy]];}
+let tCorner=null,revealT=null;
+function buildLogo(){
+  buf.fill(0);
+  if(tCorner===null){tCorner=T_CORNER();revealT=new Float32Array(others.length);
+    others.forEach((p,i)=>{let t;
+      if(p.lay===2)t=T_FAN+Math.abs(p.x-CX)/40*.18+p.j*.05;
+      else if(p.lay===3)t=uTime(p.t);
+      else if(p.lay===4)t=tCorner;
+      else if(p.lay===5)t=T_BR+easeInOut(p.t)*D_BR*.92+p.j*.06;
+      else t=T_BR+p.t*D_BR+.15+p.j*.25;
+      revealT[i]=t;});}
+  if(time>=T_LET)for(const p of letters){const k=clamp((time-T_LET)/.35),c=hot(p,(time-T_LET),p.r,p.g,p.b);px32(p.x,p.y,c[0],c[1],c[2]);}
+  for(let i=0;i<others.length;i++){const p=others[i],age=time-revealT[i];if(age<0)continue;
+    if(p.lay===4&&age<.5){ // rosette burst: spin + scale in from the corner
+      const e=easeOutBack(clamp(age/.5)),[cx,cy]=CORN[p.ci],a=(1-clamp(age/.5))*Math.PI*1.6*(p.ci%2?-1:1);
+      const dx=(p.x-cx)*e,dy=(p.y-cy)*e,x=cx+dx*Math.cos(a)-dy*Math.sin(a),y=cy+dx*Math.sin(a)+dy*Math.cos(a);
+      const c=hot(p,age*.8,p.r,p.g,p.b);px32(Math.round(x),Math.round(y),c[0],c[1],c[2]);continue;}
+    if((p.lay===2||p.lay===6)&&age<.3){ // pop: scale from own centre-ish
+      const e=easeOutBack(clamp(age/.3)),cx=p.lay===2?CX:p.x,cy=p.lay===2?(p.y<CY?FY0:FY1):p.y;
+      const c=hot(p,age,p.r,p.g,p.b);px32(Math.round(cx+(p.x-cx)*e),Math.round(cy+(p.y-cy)*e),c[0],c[1],c[2]);continue;}
+    const c=hot(p,age,p.r,p.g,p.b);px32(p.x,p.y,c[0],c[1],c[2]);
+  }
+  logoX.putImageData(logoD,0,0);
+}
+function radialFlash(cx,cy,R,f,warm){
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+  g.addColorStop(0,`rgba(255,255,255,${.8*f})`);g.addColorStop(.3,`rgba(255,190,90,${.45*f*warm})`);g.addColorStop(1,'rgba(255,120,20,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+// ---- rose petals (pixel sprites)
+const PETAL_SHAPES=[
+ ["..XX..",".XOOX.","XOOOOX","XOOOOX",".XOOX.","..XX.."],
+ [".XXX.","XOOOX","XOOOX",".XOX.","..X.."],
+ ["..XXX",".XOOX","XOOX.","XOX..","XX..."],
+ [".XX.","XOOX","XOOX","XOOX",".XX."],
+ ["XX...","XOXX.",".XOOX","..XOX","...XX"]];
+const PETAL_COLS=[["#e0203c","#7a0a1e","#ff6b80"],["#c8102e","#5e0614","#f0485e"],["#ff4f7b","#8f1238","#ff9ab0"],["#f26d8f","#9b2448","#ffc2cf"],["#a30d2a","#4a0410","#d8344e"]];
+const petalSprites=[];
+for(const sh of PETAL_SHAPES)for(const [fill,edge,hi] of PETAL_COLS){
+  const c=document.createElement('canvas');c.width=sh[0].length;c.height=sh.length;const x=c.getContext('2d');
+  sh.forEach((row,y)=>[...row].forEach((ch,i)=>{if(ch==='.')return;x.fillStyle=ch==='X'?edge:(y<=1&&i>=1&&i<=2?hi:fill);x.fillRect(i,y,1,1);}));
+  petalSprites.push(c);}
+let petals=[],petalBurst=false,nextPetal=0;
+function makePetal(x,y,burst){
+  const a=Math.random()*6.283,sp=burst?(380+Math.random()*520):0;
+  return {x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*.75-(burst?40:0),img:petalSprites[Math.random()*petalSprites.length|0],
+    ph:Math.random()*6.283,fr:1.2+Math.random()*1.6,sw:10+Math.random()*16,flip:2+Math.random()*3,
+    rot:Math.random()*6.283,vr:(Math.random()-.5)*3,term:22+Math.random()*18,life:0,sc:(PX<2?2:1)*(Math.random()<.35?1.5:1)};}
+function updatePetals(dt){
+  if(!petalBurst&&time>=T_FIN){petalBurst=true;const n=40+(Math.random()*30|0);for(let i=0;i<n;i++)petals.push(makePetal(ox+CX,oy+CY,true));nextPetal=1.5;}
+  if(petalBurst){nextPetal-=dt;if(nextPetal<=0){petals.push(makePetal(Math.random()*W,-6,false));nextPetal=.6+Math.random()*1.2;}}
+  ctx.imageSmoothingEnabled=false;
+  for(let i=petals.length-1;i>=0;i--){const p=petals[i];p.life+=dt;
+    const drag=Math.exp(-2.4*dt);p.vx*=drag;p.vy*=drag;           // air drag kills burst force
+    p.vy+=22*dt; if(p.vy>p.term)p.vy+=(p.term-p.vy)*(1-Math.exp(-3*dt)); // low gravity, small terminal velocity
+    const sway=Math.sin(p.ph+p.life*p.fr)*p.sw;                   // feather flutter
+    p.x+=(p.vx+sway)*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt;
+    const fade=clamp((H-p.y)/(H*.25));if(p.y>H+10||fade<=0){petals.splice(i,1);continue;}
+    const fl=Math.cos(p.life*p.flip+p.ph);                         // flip (scaleX oscillation)
+    ctx.save();ctx.globalAlpha=fade*clamp(p.life/.08);ctx.translate(Math.round(p.x),Math.round(p.y));ctx.rotate(Math.round(p.rot/(Math.PI/4))*(Math.PI/4)+Math.sin(p.life*p.fr)*.3);
+    ctx.scale((Math.abs(fl)<.2?.2*Math.sign(fl||1):fl)*p.sc,p.sc);ctx.drawImage(p.img,-p.img.width/2|0,-p.img.height/2|0);ctx.restore();}
+}
+function spawnShoot(){
+  const fromLeft=Math.random()<.5,sp=140+Math.random()*120;
+  const ang=(fromLeft?0:Math.PI)+(fromLeft?1:-1)*(.25+Math.random()*.35);
+  shoot.push({x:fromLeft?-10:W+10,y:Math.random()*H*.5,vx:Math.cos(ang)*sp,vy:Math.abs(Math.sin(ang))*sp,life:0,max:1.2+Math.random()*.8,trail:[]});
+}
+function frame(ts){
+  if(last===null)last=ts;let dt=(ts-last)/1000;last=ts;dt=Math.min(Math.max(dt,0),1/20);
+  if(!ready){requestAnimationFrame(frame);return;}
+  time+=dt;
+  ctx.globalAlpha=1;ctx.fillStyle='#07060d';ctx.fillRect(0,0,W,H);
+  for(const s of stars){
+    s.x-=s.v*dt;if(s.x<0)s.x+=W;
+    const b=.5+.5*Math.sin(s.p+time*s.s),l=Math.round(80+175*b);ctx.fillStyle=`rgb(${l},${l},${Math.min(255,l+30)})`;
+    const x=s.x|0,y=s.y|0,ss=PX<2?2:1;ctx.fillRect(x,y,ss,ss);
+    if(s.big&&b>.7){ctx.fillStyle=`rgba(150,160,220,${(b-.5)*1.5})`;ctx.fillRect(x-1,y,1,1);ctx.fillRect(x+1,y,1,1);ctx.fillRect(x,y-1,1,1);ctx.fillRect(x,y+1,1,1);}
+  }
+  nextShoot-=dt;if(nextShoot<=0){spawnShoot();nextShoot=3+Math.random()*5;}
+  for(let i=shoot.length-1;i>=0;i--){const s=shoot[i];s.life+=dt;s.x+=s.vx*dt;s.y+=s.vy*dt;s.trail.push([s.x,s.y]);if(s.trail.length>40)s.trail.shift();
+    const fade=Math.min(1,(s.max-s.life)/.4);
+    for(let k=0;k<s.trail.length;k++){const a=(k/s.trail.length)*fade;ctx.fillStyle=k>s.trail.length-3?`rgba(255,255,255,${a})`:`rgba(200,215,255,${a})`;ctx.fillRect(Math.round(s.trail[k][0]),Math.round(s.trail[k][1]),1,1);}
+    if(s.life>s.max||s.x<-50||s.x>W+50||s.y>H+50)shoot.splice(i,1);}
+  const cx=ox+CX,cy=oy+CY,R=Math.max(W,H)*.75;
+  // 1) letters fly in
+  if(time<T_LET+.05){const prog=time/T_LET;
+    for(const p of letters){let t=(prog-p.delay)/(1-.5);t=clamp(t);if(t===0)continue;
+      const tx=ox+p.x,ty=oy+p.y,fx=cx+p.sx*R,fy=cy+p.sy*R;
+      const pos=u=>{const e=easeOutQuint(u),sw=Math.sin(e*Math.PI)*p.sw*R*.4;return[fx+(tx-fx)*e-p.sy*sw,fy+(ty-fy)*e+p.sx*sw];};
+      ctx.fillStyle=p.c;
+      if(t<1){for(let k=3;k>=1;k--){const q=pos(Math.max(0,t-k*.035));ctx.globalAlpha=.18*(4-k)*Math.min(1,t*3);ctx.fillRect(Math.round(q[0]),Math.round(q[1]),1,1);}}
+      const q=pos(t);ctx.globalAlpha=Math.min(1,.2+t*1.4);ctx.fillRect(Math.round(q[0]),Math.round(q[1]),1,1);}
+    ctx.globalAlpha=1;}
+  // built layers
+  if(time>=T_LET){
+    const fin=time>=T_FIN+.2;
+    const src=fin?full:(buildLogo(),logoC);
+    const ramp=clamp((time-T_FIN)/.8),pulse=.55+.45*Math.sin(time*2.2),base=.35;
+    ctx.save();ctx.shadowColor=`rgba(255,140,30,${base+(.4*pulse)*ramp})`;ctx.shadowBlur=(6+(2+6*pulse)*ramp)*Math.max(1,3-PX);
+    ctx.globalAlpha=.9;ctx.drawImage(src,ox,oy);if(ramp>0)ctx.drawImage(src,ox,oy);ctx.restore();ctx.drawImage(src,ox,oy);
+  }
+  // small flash when letters lock in
+  const f1=time-T_FLASH1;if(f1>=0&&f1<.5){const f=1-easeOutCubic(f1/.5);radialFlash(cx,cy,lh*.9*(.6+f1),f*.55,1);}
+  // 2) spark heads leading the frame lines
+  const u=edgeU();if(time>=T_EDGE&&time<T_EDGE+D_EDGE+.15){
+    const hs=headPos(u),fade=clamp((T_EDGE+D_EDGE+.15-time)/.15);
+    for(const [hx,hy] of hs){const X=Math.round(ox+hx),Y=Math.round(oy+hy);
+      ctx.save();ctx.shadowColor='rgba(255,170,60,1)';ctx.shadowBlur=10;ctx.globalAlpha=fade;
+      ctx.fillStyle='#fff6de';ctx.fillRect(X-2,Y-2,4,4);ctx.fillStyle='#ffb43c';ctx.fillRect(X-3,Y-1,6,2);ctx.fillRect(X-1,Y-3,2,6);ctx.restore();
+      // ember sparks thrown off the head
+      for(let k=0;k<3;k++){const a=Math.random()*6.28,r=Math.random()*7;ctx.globalAlpha=fade*.8;ctx.fillStyle=k?'#ff9a2a':'#ffe7b0';ctx.fillRect(Math.round(X+Math.cos(a)*r),Math.round(Y+Math.sin(a)*r),1,1);}
+      ctx.globalAlpha=1;}}
+  // rosette burst rings
+  if(tCorner!==null){const a=time-tCorner;if(a>=0&&a<.5){const f=1-a/.5;ctx.fillStyle=`rgba(255,220,150,${f})`;
+    for(const [qx,qy] of CORN)for(let k=0;k<16;k++){const an=k/16*6.283+a*3,r=4+a*44;ctx.fillRect(Math.round(ox+qx+Math.cos(an)*r),Math.round(oy+qy+Math.sin(an)*r),2,2);}}}
+  // 4) final flash
+  const f2=time-T_FIN;if(f2>=0&&f2<.8){const f=1-easeInOut(f2/.8);radialFlash(cx,cy,Math.min(W,H)*.5*(.5+f2*.7),f,1);
+    ctx.globalAlpha=f;ctx.fillStyle='#fff';for(let k=0;k<48;k++){const a=k/48*6.283,r=f2*lw*.8*(0.7+0.3*((k*37)%10)/10);ctx.fillRect(Math.round(cx+Math.cos(a)*r),Math.round(cy+Math.sin(a)*r*.5),2,2);}ctx.globalAlpha=1;}
+  updatePetals(dt);
+  requestAnimationFrame(frame);
+}
+})();
+</script>
 </body>
 </html>
