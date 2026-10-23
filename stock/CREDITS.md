@@ -36,4 +36,4 @@ stock/llc-preview.jpg is a screenshot of https://landrcy.github.io/ that's used 
 Public Domain textures by Titus Tscharntke: Ground_dirt.jpg, Light_brown_earth_texture_jpg.jpg, Rock_texture_1_jpg.jpg. Roots and vines are hand-drawn pixel art.
 
 ## LLC section (llc/)
-The logo, the Binding of Ashaad sprites and screenshot, and the Game of Websites disc all come from https://landrcy.github.io/ (the logo is the site's own rendered monogram canvas). The Eternal Ball Fight image is a screenshot of that site's arena.
+The logo, the Binding of Ashaad sprites and screenshot, and the Game of Websites disc all come from https://landrcy.github.io/ (the logo is the site's own rendered monogram canvas). The Eternal Ball Fight image is a screenshot of that site's arena. Card images are downscaled/pixelated copies; the rift cracks are procedural pixel art.
