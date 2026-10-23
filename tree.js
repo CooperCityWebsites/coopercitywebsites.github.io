@@ -111,4 +111,5 @@ Promise.all([Promise.all(STICKS.map(load)),Promise.all(LEAVES.map(load))]).then(
   st=st.filter(Boolean);IMG.thick=st.filter(i=>i.width/i.height>.17);IMG.thin=st.filter(i=>i.width/i.height<=.17);
   if(!IMG.thick.length)IMG.thick=st;if(!IMG.thin.length)IMG.thin=st;leafTints=lv.filter(Boolean).map(bakeLeafTints);ready=true;layout();});
 (window.FFC_HOOKS=window.FFC_HOOKS||[]).push(hook);addEventListener('resize',()=>{if(ready)layout();});
+const _lay=layout;layout=function(){_lay();if(trees.length){window.FFC_TREE_X=trees.map(t=>t.cx/W);dispatchEvent(new Event('ffc-trees'));}};
 })();

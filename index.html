@@ -7,7 +7,7 @@
 <link rel="icon" href="data:,">
 <style>
 html,body{margin:0;background:#07060d;overflow-x:hidden}
-body{height:calc(400vh + max(100vh,560px) + 480px + max(74vh,500px))}
+body{height:calc(400vh + max(100vh,560px) + 480px + max(74vh,500px) + max(220vh,1500px) + max(100vh,680px))}
 #hint{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);color:#fff;font:500 13px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.12em;text-transform:lowercase;text-align:center;opacity:0;transition:opacity .6s ease;pointer-events:none;user-select:none}
 #hint svg{display:block;margin:6px auto 0;animation:bob 1.6s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
@@ -149,6 +149,32 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #tsky img{position:absolute;left:0;width:calc(var(--w) * var(--tpx,4px));image-rendering:pixelated;will-change:transform;animation:cdrift var(--d) linear infinite;animation-delay:var(--dl)}
 #tsky.idle img{animation-play-state:paused}
 @keyframes cdrift{from{transform:translateX(-30vw)}to{transform:translateX(110vw)}}
+#under{position:absolute;left:0;width:100%;top:calc(400vh + max(100vh,560px) + 480px + max(74vh,500px));height:max(220vh,1500px);z-index:1;overflow:hidden;background:#0d0a1a url(stock/strata.png?v=5b131005) 50% 0/auto 100% repeat-x;image-rendering:pixelated}
+#uroots{position:absolute;left:0;top:0;width:100%;height:30%;image-rendering:pixelated;pointer-events:none}
+#upar{position:absolute;inset:0;pointer-events:none;will-change:transform}
+#upar i{position:absolute;width:6px;height:6px;background:var(--c);box-shadow:0 0 10px 3px var(--c);opacity:.85;animation:utw 2.4s steps(4) infinite;animation-delay:var(--dl)}
+@keyframes utw{50%{opacity:.25}}
+#ucave{position:absolute;left:0;width:100%;top:calc(calc(400vh + max(100vh,560px) + 480px + max(74vh,500px)) + max(220vh,1500px));height:max(100vh,680px);z-index:1;overflow:hidden;
+ background:radial-gradient(ellipse at 50% 55%,#2a1650 0,#160d2b 45%,#0d0a1a 75%);font-family:"Press Start 2P",monospace;color:#fff}
+#ucave::before{content:"";position:absolute;left:0;right:0;bottom:0;height:70px;background:repeating-linear-gradient(90deg,#1a1426 0 18px,#221a30 18px 36px);clip-path:polygon(0 40%,6% 20%,13% 45%,22% 15%,31% 40%,40% 25%,50% 45%,61% 18%,70% 42%,80% 22%,90% 44%,100% 20%,100% 100%,0 100%)}
+#uportal{position:absolute;left:50%;top:50%;width:min(86vw,640px);transform:translate(-50%,-50%) scale(.92);text-align:center;opacity:.0;transition:opacity .5s,transform .7s cubic-bezier(.2,1.6,.4,1)}
+#ucave.dig #uportal{opacity:1}#ucave.open #uportal{transform:translate(-50%,-50%) scale(1)}
+#uportal .win{position:relative;border:4px solid #000;box-shadow:0 0 0 4px #8f6bff,0 0 0 8px #000,0 0 40px 10px rgba(255,93,143,.55),0 0 90px 20px rgba(143,107,255,.35);background:#fff6ee;line-height:0}
+#ucave.open #uportal .win{animation:upulse 2.2s ease-in-out infinite}
+@keyframes upulse{50%{box-shadow:0 0 0 4px #ff5d8f,0 0 0 8px #000,0 0 55px 16px rgba(255,93,143,.75),0 0 110px 28px rgba(143,107,255,.45)}}
+#uportal .win img{width:100%;height:auto;image-rendering:pixelated}
+#uportal .bar{display:flex;gap:6px;padding:6px 8px;background:#5a2596;line-height:1}#uportal .bar b{width:8px;height:8px;background:#ff5d8f}#uportal .bar b+b{background:#ffd166}#uportal .bar b+b+b{background:#38e1d0}
+#uportal .bar span{margin-left:auto;font-size:8px;color:#fff6ee}
+#uportal h3{margin:22px 0 10px;font-size:clamp(26px,4vw,48px);font-weight:400;color:#ff5d8f;text-shadow:4px 4px 0 #000,-2px -2px 0 #000}
+#uportal p{margin:0 0 18px;font-size:clamp(9px,1.1vw,13px);color:#fff;text-shadow:2px 2px 0 #000}
+#uportal .btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+#uportal .btns a{display:inline-block;padding:12px 16px;font-size:clamp(10px,1vw,13px);text-decoration:none;color:#160822;background:#ff5d8f;box-shadow:0 0 0 3px #000,inset -3px -3px 0 #c2412d,inset 3px 3px 0 #ffd1ea}
+#uportal .btns a.c{background:#38e1d0;box-shadow:0 0 0 3px #000,inset -3px -3px 0 #1d6a48,inset 3px 3px 0 #dfe6ff}
+#uportal .btns a:hover,#uportal .btns a:focus-visible{filter:brightness(1.15);outline:none;transform:translateY(-2px)}
+#uwall{position:absolute;left:50%;top:50%;width:min(96vw,760px);height:calc(min(86vw,640px) * .5625 + 300px);transform:translate(-50%,-50%);image-rendering:pixelated;z-index:2;pointer-events:none}
+#udepth{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:20;font:12px "Press Start 2P",monospace;color:#fff;background:rgba(0,0,0,.55);padding:8px 10px;box-shadow:0 0 0 2px #000;opacity:0;transition:opacity .4s;pointer-events:none}
+#udepth.on{opacity:1}
+@media (max-width:600px){#udepth{font-size:9px;right:6px;top:auto;bottom:10px;transform:none}}
 #tcv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
 #tmid{position:absolute;left:50%;top:33%;transform:translate(-50%,-50%);text-align:center;width:min(46%,620px);z-index:3;opacity:0;transition:opacity .8s 1.6s,transform .8s 1.6s}
 #tree.on #tmid{opacity:1;transform:translate(-50%,-56%)}
@@ -420,7 +446,15 @@ function frame(ts){
 <section id="tree" aria-label="Touch Grass"><canvas id="tcv" aria-hidden="true"></canvas><div id="tgnd" aria-hidden="true"></div>
   <div id="tmid"><h2><picture><source media="(max-width:600px)" srcset="stock/title-2line.png?v=77e878b9"><img src="stock/title-1line.png?v=8980d976" alt="Touch Grass"></picture></h2><p>grow trees, set them on fire, make it rain</p><a href="https://rainbowroar14.github.io/Tree/" target="_blank" rel="noopener">open</a></div>
   <div id="gh"><img src="sprout/sign.png?v=970cd4ed" alt=""><div class="board"><div class="t"><i></i>GitHub</div><a href="https://github.com/rainbowroar14" target="_blank" rel="noopener">rainbowroar14</a></div></div></section>
-<script src="tree.js?v=86ff9505"></script>
+<section id="under" aria-label="Underground"><canvas id="uroots" aria-hidden="true"></canvas><div id="upar" aria-hidden="true"><i style="left:25%;top:72%;--c:#ff5d8f;--dl:-2.2s"></i><i style="left:48%;top:74%;--c:#38e1d0;--dl:-2.2s"></i><i style="left:47%;top:72%;--c:#8f6bff;--dl:-2.4s"></i><i style="left:47%;top:89%;--c:#ffd166;--dl:-1.0s"></i><i style="left:85%;top:53%;--c:#8f6bff;--dl:-2.1s"></i><i style="left:52%;top:83%;--c:#38e1d0;--dl:-0.4s"></i><i style="left:94%;top:42%;--c:#38e1d0;--dl:-2.0s"></i><i style="left:28%;top:74%;--c:#ffd166;--dl:-1.7s"></i><i style="left:90%;top:63%;--c:#ffd166;--dl:-2.3s"></i><i style="left:15%;top:61%;--c:#38e1d0;--dl:-0.3s"></i><i style="left:23%;top:96%;--c:#ffd166;--dl:-1.9s"></i><i style="left:84%;top:64%;--c:#ffd166;--dl:-1.4s"></i><i style="left:53%;top:64%;--c:#8f6bff;--dl:-2.2s"></i><i style="left:67%;top:94%;--c:#ff5d8f;--dl:-2.4s"></i><i style="left:66%;top:49%;--c:#ff5d8f;--dl:-2.3s"></i><i style="left:89%;top:73%;--c:#8f6bff;--dl:-1.5s"></i><i style="left:97%;top:55%;--c:#38e1d0;--dl:-0.2s"></i><i style="left:84%;top:97%;--c:#38e1d0;--dl:-0.8s"></i></div></section>
+<section id="ucave" aria-label="LLC: another website with more fun">
+  <div id="uportal"><div class="win"><div class="bar"><b></b><b></b><b></b><span>landrcy.github.io</span></div><img src="stock/llc-preview.jpg?v=bfcf212c" alt="Preview of the LLC website" width="640" height="360"></div>
+    <h3>LLC</h3><p>another website with more fun</p>
+    <div class="btns"><a href="https://landrcy.github.io/" target="_blank" rel="noopener">open LLC</a><a class="c" href="https://landrcy.github.io/#contact" target="_blank" rel="noopener">contact</a></div></div>
+  <canvas id="uwall" aria-hidden="true"></canvas></section>
+<div id="udepth" aria-hidden="true">▼ 0 m</div>
+<script src="under.js?v=1429717f"></script>
+<script src="tree.js?v=027460df"></script>
 <script src="casino.js?v=91c43599"></script>
 <script src="sticky.js?v=e4b5ada3"></script>
 

@@ -27,3 +27,7 @@ Clouds (cut out with make_clouds.py, then pixelated: stock/cloud_1-7.png):
 - [File:Cumulus Cloud.jpg](https://commons.wikimedia.org/wiki/File:Cumulus_Cloud.jpg), Hoodedwarbler12 (talk), Public domain
 - [File:Bright blue sky with scenic white cloud patterns.jpg](https://commons.wikimedia.org/wiki/File:Bright_blue_sky_with_scenic_white_cloud_patterns.jpg), Trixia Lao, CC0
 - [File:Cumulus cloud -2025.jpg](https://commons.wikimedia.org/wiki/File:Cumulus_cloud_-2025.jpg), Ani Vincent, CC0
+
+## Underground strata (stock/strata.png, built by make_under.py)
+Public Domain textures by Titus Tscharntke (via Wikimedia Commons / publicdomainpictures): Ground_dirt.jpg (topsoil), Light_brown_earth_texture_jpg.jpg (clay), Rock_texture_1_jpg.jpg (rock), Stone_rock_texture_closeup_jpg.jpg (deep rock), Small_stones.jpg (pebble cutouts). Roots, worms, fossils and crystals are hand-drawn pixel art.
+stock/llc-preview.jpg is a screenshot of https://landrcy.github.io/ that's used as the portal preview.
