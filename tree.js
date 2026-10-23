@@ -49,14 +49,15 @@ function makeGust(){const gg={t0:t,dir:Math.random()<.6?1:-1,s:.45+Math.random()
 const windNow=()=>gust?gust.wind(t-gust.t0):windBase;
 function layout(){
   const r=sec.getBoundingClientRect();PX=Math.max(3,Math.round(r.height/120));W=Math.ceil(r.width/PX);H=Math.ceil(r.height/PX);cv.width=W;cv.height=H;
-  sec.style.setProperty('--tpx',PX+'px');{const sw=Math.round(Math.min(170,Math.max(104,r.width*.11),r.height*.34*64/85));sign.style.width=sw+'px';sign.style.marginLeft=(-sw/2)+'px';}GY=H-5;if(!ready)return;
+  sec.style.setProperty('--tpx',PX+'px');{const tm=document.getElementById('tmid'),gh=document.getElementById('tgnd').getBoundingClientRect().height,tb=r.height*.33+tm.offsetHeight*.44,avail=r.height-gh*.42-tb-16;
+   const sw=Math.round(Math.max(96,Math.min(225,Math.max(135,r.width*.145),avail*64/85)));sec.style.setProperty('--sw',sw+'px');}GY=H-5;if(!ready)return;
   rnd=mulberry(20261023);leafCache.clear();trees=[];const mob=r.width<700;
   const spots=mob?[[.15,.3,1,0],[.85,.3,1,.3]]:[[.11,.24,1,0],[.89,.24,1,.25],[.27,.15,.7,.6],[.73,.15,.7,.85]];
   for(const[fx,fw,sz,delay]of spots){
     const tr=buildTree(4),cap=Math.floor(260*sz);if(tr.leaves.length>cap){tr.leaves.sort((a,b)=>(b.tip-a.tip)||(rnd()-.5));tr.leaves.length=cap;}
     tr.branches.forEach(b=>b.start+=delay);tr.leaves.forEach(l=>l.start+=delay);
     const bb=bboxOf(tr),bw=bb.x1-bb.x0,bh=-bb.y0;
-    const k=Math.min(W*fw/bw,GY*(mob?.5:.95)*sz/bh);             // canvas px per tree unit
+    const k=Math.min(W*fw/bw,(GY-H*.14)*(mob?.55:.95)*sz/bh);             // canvas px per tree unit
     const cx=Math.round(W*fx-(bb.x0+bb.x1)/2*k);
     for(const b of tr.branches){b.k=k;b.pre=preStick(b.img,Math.max(1,b.w*k),Math.max(1,b.len*k),b.flip);}
     const nf=Math.floor(tr.leaves.length*.4);
@@ -78,15 +79,14 @@ function frame(dt){
   if(gust){const u=t-gust.t0;leafRate=u<gust.rise+gust.hold?2.6:u<gust.len?1.7:1;if(u>gust.len+4)gust=null;}
   const wnd=windNow();
   g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);
-  g.fillStyle='#6b6f75';g.fillRect(0,GY,W,H-GY);g.fillStyle='#9a9ea4';g.fillRect(0,GY,W,1);g.fillStyle='#55595f';g.fillRect(0,H-1,W,1);
+  
   for(const tr of trees){
     // gust spring, as in Sprout (lagged by position)
     const lag=gust?(gust.dir>0?tr.cx/W:1-tr.cx/W)*.35:0,e=gust?gust.env(t-gust.t0-lag):0;
     const target=((gust?gust.dir*gust.s*e*(1+.2*Math.sin((t-(gust?gust.t0:0))*5.1+tr.cx)):0)+windBase*.3)*7*tr.flex;
     tr.v+=((target-tr.b)*16-tr.v*3.2)*dt;tr.b+=tr.v*dt;
     const grown=gt>tr.end+.1,rot=grown?(Math.sin(t*6.283/tr.d+tr.ph)*tr.a+tr.b*.8*Math.PI/180):0,cs=Math.cos(rot),sn=Math.sin(rot);
-    g.fillStyle='#2b1c10';g.fillRect(tr.cx-Math.round(tr.k*28),GY,Math.round(tr.k*56),2);   // dirt opening
-    const M=(ctx,c2,s2,px,py)=>{const X=px*cs-py*sn+tr.cx,Y=px*sn+py*cs+GY;ctx.setTransform(c2*cs-s2*sn,c2*sn+s2*cs,-(c2*sn+s2*cs),c2*cs-s2*sn,X,Y);};
+        const M=(ctx,c2,s2,px,py)=>{const X=px*cs-py*sn+tr.cx,Y=px*sn+py*cs+GY;ctx.setTransform(c2*cs-s2*sn,c2*sn+s2*cs,-(c2*sn+s2*cs),c2*cs-s2*sn,X,Y);};
     if(!grown){g.imageSmoothingEnabled=true;
       for(const b of tr.branches){const p=(gt-b.start)/b.dur;if(p>0)drawStick(g,b,easeOut(Math.min(1,p)),M);}
       for(const l of tr.leaves){const p=(gt-l.start)/l.dur;if(p>0)drawLeaf(g,l,easeBack(Math.min(1,p)),l.ang,M);}

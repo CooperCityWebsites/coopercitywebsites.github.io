@@ -7,7 +7,7 @@
 <link rel="icon" href="data:,">
 <style>
 html,body{margin:0;background:#07060d;overflow-x:hidden}
-body{height:calc(400vh + max(100vh,560px) + max(65vh,420px))}
+body{height:calc(400vh + max(100vh,560px) + 80px + max(74vh,500px))}
 #hint{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);color:#fff;font:500 13px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.12em;text-transform:lowercase;text-align:center;opacity:0;transition:opacity .6s ease;pointer-events:none;user-select:none}
 #hint svg{display:block;margin:6px auto 0;animation:bob 1.6s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
@@ -129,20 +129,26 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 @keyframes hb{50%{opacity:.3}}
 #rres #ragain{display:inline-block;text-decoration:none;margin-top:12px;padding:10px 14px;border:0;box-shadow:0 0 0 3px #1a0c00,inset -3px -3px 0 #8a5600,inset 3px 3px 0 #fff3b0;background:#ffd44a;color:#1a0c00;font:12px "Press Start 2P",monospace;cursor:pointer}
 #rres #ragain:hover{background:#ffe68a}#rres #ragain:active{transform:translateY(2px)}
-#tree{position:absolute;left:0;top:calc(400vh + max(100vh,560px));width:100%;height:max(65vh,420px);overflow:hidden;z-index:1;background:linear-gradient(rgba(13,20,16,0),#0d1410 22%,#14201a);font-family:"Press Start 2P",monospace;color:#fff;
+#tree{position:absolute;left:0;top:calc(400vh + max(100vh,560px) + 80px);width:100%;height:max(74vh,500px);overflow:hidden;z-index:1;background:linear-gradient(rgba(13,20,16,0),#0d1410 22%,#14201a);font-family:"Press Start 2P",monospace;color:#fff;
 }
-#gh{position:absolute;left:50%;bottom:calc(5 * var(--tpx,4px) - 2px);width:clamp(120px,13vw,190px);aspect-ratio:64/85;margin-left:calc(clamp(120px,13vw,190px) / -2);z-index:2;opacity:0;transition:opacity .6s 2.4s;transform-origin:50% 100%;will-change:transform}
+#tbord{position:absolute;left:0;right:0;top:0;height:clamp(64px,13%,104px);background:url(stock/border-top.png?v=6ce866f1) 0 0/auto 100% repeat-x;z-index:3;pointer-events:none}
+#tgnd{position:absolute;left:0;right:0;bottom:0;height:clamp(70px,17%,130px);background:url(stock/ground.png?v=5133c98a) 0 100%/auto 100% repeat-x;z-index:2;pointer-events:none}
+#gh{position:absolute;left:50%;width:var(--sw,150px);aspect-ratio:64/85;margin-left:calc(var(--sw,150px) / -2);bottom:var(--sb,40px);z-index:1;opacity:0;transition:opacity .6s 2.4s;transform-origin:50% 100%;will-change:transform}
 #tree.on #gh{opacity:1}
 #gh img{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none}
-#gh .board{position:absolute;left:6%;right:6%;top:6%;height:36%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6%}
-#gh .t{display:flex;align-items:center;gap:6px;font-size:clamp(9px,1vw,14px);color:#fff4d6;text-shadow:2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000,2px 2px 0 #000}
-#gh .t i{width:12px;height:12px;background:#fff4d6;box-shadow:2px 2px 0 #000;clip-path:polygon(15% 0,35% 15%,65% 15%,85% 0,100% 30%,100% 70%,65% 100%,65% 80%,35% 80%,35% 100%,0 70%,0 30%)}
-#gh a{display:inline-block;padding:5px 5px;background:#1b120a;color:#fff4d6;text-decoration:none;font-size:clamp(6px,.62vw,9px);box-shadow:0 0 0 2px #000,inset 2px 2px 0 #4a3523}
-#gh a:hover,#gh a:focus-visible{background:#2de65f;color:#000;outline:none}
+#gh .board{position:absolute;left:7%;right:7%;top:7%;height:35%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7%}
+/* carved into the wood: translucent dark fill lets the grain show, inner shadow top-left, light lip bottom-right */
+#gh .t{display:flex;align-items:center;gap:.3em;font-size:calc(var(--sw,150px) * .092);color:rgba(28,13,4,.72);text-shadow:-1px -1px 0 rgba(0,0,0,.55),1px 1px 0 rgba(255,222,175,.42);transition:color .2s}
+#gh .t i{width:.9em;height:.9em;background:rgba(28,13,4,.72);filter:drop-shadow(1px 1px 0 rgba(255,222,175,.42));clip-path:polygon(15% 0,35% 15%,65% 15%,85% 0,100% 30%,100% 70%,65% 100%,65% 80%,35% 80%,35% 100%,0 70%,0 30%)}
+#gh a{display:inline-block;padding:.55em .7em;background:rgba(30,14,4,.5);color:#f6e3bd;text-decoration:none;font-size:calc(var(--sw,150px) * .056);border-radius:2px;
+ box-shadow:inset 2px 2px 3px rgba(0,0,0,.75),inset -1px -1px 0 rgba(255,222,175,.3),1px 1px 0 rgba(255,222,175,.35);text-shadow:1px 1px 0 #000;transition:background .2s,color .2s}
+#gh a:hover,#gh a:focus-visible{background:rgba(255,196,110,.32);color:#fff;outline:none}
+#gh:hover .t{color:rgba(60,30,8,.9)}
+#tmid h2{margin:0;line-height:0}#tmid h2 img{width:min(100%,640px);height:auto}
 #tcv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
-#tmid{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);text-align:center;width:min(40%,520px);opacity:0;transition:opacity .8s 1.6s,transform .8s 1.6s}
+#tmid{position:absolute;left:50%;top:33%;transform:translate(-50%,-50%);text-align:center;width:min(46%,620px);z-index:3;opacity:0;transition:opacity .8s 1.6s,transform .8s 1.6s}
 #tree.on #tmid{opacity:1;transform:translate(-50%,-56%)}
-#tmid h2{margin:0;font-size:clamp(22px,4.2vw,56px);font-weight:400;color:#c8f08a;text-shadow:4px 4px 0 #000,-2px -2px 0 #000}
+
 #tmid p{margin:14px 0 18px;font-size:clamp(9px,1vw,13px);line-height:1.6;color:#f4f4f4;text-shadow:2px 2px 0 #000}
 #tmid a{display:inline-block;padding:12px 18px;background:#6aa43e;color:#0b1a08;text-decoration:none;font-size:clamp(11px,1.1vw,14px);box-shadow:0 0 0 3px #000,inset -3px -3px 0 #3d7a2c,inset 3px 3px 0 #b8e27a}
 #tmid a:hover,#tmid a:focus-visible{background:#86bf52;outline:none}
@@ -406,10 +412,10 @@ function frame(ts){
     <a href="https://rainbowroar14.github.io/RNG/" target="_blank" rel="noopener" aria-label="Test Your Luck"><img src="px/title.png?v=03a770d5" alt="Test Your Luck"></a></div>
     <div class="after"><div class="odds">1/∞</div><div class="hint"><span>click to play</span></div><a id="ragain" href="https://rainbowroar14.github.io/RNG/" target="_blank" rel="noopener">roll again</a></div></div>
 </section>
-<section id="tree" aria-label="Sprout"><canvas id="tcv" aria-hidden="true"></canvas>
-  <div id="tmid"><h2>Sprout</h2><p>grow trees, set them on fire, make it rain</p><a href="https://rainbowroar14.github.io/Tree/" target="_blank" rel="noopener">open</a></div>
+<section id="tree" aria-label="Touch Grass"><div id="tbord" aria-hidden="true"></div><canvas id="tcv" aria-hidden="true"></canvas><div id="tgnd" aria-hidden="true"></div>
+  <div id="tmid"><h2><picture><source media="(max-width:600px)" srcset="stock/title-2line.png?v=e722428a"><img src="stock/title-1line.png?v=5a83011d" alt="Touch Grass"></picture></h2><p>grow trees, set them on fire, make it rain</p><a href="https://rainbowroar14.github.io/Tree/" target="_blank" rel="noopener">open</a></div>
   <div id="gh"><img src="sprout/sign.png?v=970cd4ed" alt=""><div class="board"><div class="t"><i></i>GitHub</div><a href="https://github.com/rainbowroar14" target="_blank" rel="noopener">rainbowroar14</a></div></div></section>
-<script src="tree.js?v=73f839f5"></script>
+<script src="tree.js?v=25504038"></script>
 <script src="casino.js?v=91c43599"></script>
 <script src="sticky.js?v=e4b5ada3"></script>
 
