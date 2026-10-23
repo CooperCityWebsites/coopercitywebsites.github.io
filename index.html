@@ -7,7 +7,7 @@
 <link rel="icon" href="data:,">
 <style>
 html,body{margin:0;background:#07060d;overflow-x:hidden}
-body{height:400vh}
+body{height:420vh}
 #hint{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);color:#fff;font:500 13px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.12em;text-transform:lowercase;text-align:center;opacity:0;transition:opacity .6s ease;pointer-events:none;user-select:none}
 #hint svg{display:block;margin:6px auto 0;animation:bob 1.6s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
@@ -49,8 +49,34 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 #scr.played .clickhint{display:none}
 .clickhint{position:absolute;left:50%;transform:translateX(-50%);bottom:24%;color:#fff;font:600 12px/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:lowercase;text-shadow:0 1px 3px rgba(0,0,0,.6);opacity:.8;animation:hp 1.6s ease-in-out infinite;pointer-events:none}
 @keyframes hp{0%,100%{opacity:.35}50%{opacity:.9}}
+
+#sticky{position:absolute;left:0;top:290vh;width:100%;height:max(100vh,620px);overflow:hidden;z-index:1;-webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 14%,#000 86%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0%,#000 14%,#000 86%,transparent 100%);font-family:"Patrick Hand",cursive}
+#sboard{position:absolute;inset:0;background-color:#fff;background-image:radial-gradient(#e7e5e4 1.3px,transparent 1.3px);background-size:28px 28px;opacity:0;transition:opacity .25s}
+#sticky.done #sboard{opacity:1}
+#splat{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+#sword{position:absolute;inset:0;z-index:4;pointer-events:none}
+.lnote{position:absolute;left:0;top:0;width:var(--ns,80px);height:var(--ns,80px);display:grid;place-items:center;font-size:calc(var(--ns,80px)*.68);line-height:1;color:#1c1917;border-radius:3px;box-shadow:0 1px 0 rgba(28,25,23,.05),0 10px 22px rgba(0,0,0,.28);opacity:0;will-change:transform}
+.mouse{position:absolute;left:0;top:0;z-index:5;pointer-events:none;opacity:0;will-change:transform;transform-origin:0 0}
+.mc{display:block;width:16px;height:16px;border-radius:99px 99px 99px 2px;transform:rotate(-90deg);background:#1c1917;box-shadow:0 0 0 2px #fffef8,0 2px 6px rgba(0,0,0,.35)}
+.mn{position:absolute;left:20px;top:-6px;padding:2px 6px;border-radius:6px;background:#1c1917;color:#fffef8;font:600 12px Figtree,"Segoe UI",sans-serif;white-space:nowrap}
+#sextras{position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none}
+#sticky.done #sextras{opacity:1;pointer-events:auto}
+#sextras>*{position:absolute;transform:translate(-50%,-50%) rotate(var(--r)) scale(.3);transition:transform .6s cubic-bezier(.3,1.6,.5,1),opacity .3s;opacity:0}
+#sticky.done #sextras>*{transform:translate(-50%,-50%) rotate(var(--r)) scale(1);opacity:1}
+#sticky.done #sextras>*:nth-child(2){transition-delay:.08s}#sticky.done #sextras>*:nth-child(3){transition-delay:.16s}#sticky.done #sextras>*:nth-child(4){transition-delay:.24s}#sticky.done #sextras>*:nth-child(5){transition-delay:.32s}#sticky.done #sextras>*:nth-child(6){transition-delay:.4s}#sticky.done #sextras>*:nth-child(7){transition-delay:.48s}#sticky.done #sextras>*:nth-child(8){transition-delay:.56s}
+.meme{width:clamp(70px,11vw,140px);filter:drop-shadow(0 8px 14px rgba(28,25,23,.25))}
+.tnote{width:clamp(130px,17vw,200px);padding:12px 14px 14px;border-radius:3px;color:#1c1917;font-size:clamp(17px,1.8vw,22px);line-height:1.2;box-shadow:0 1px 0 rgba(28,25,23,.05),0 14px 30px rgba(28,25,23,.16)}
+#ttt{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0}
+#ttt button{aspect-ratio:1;border:0;border-radius:4px;background:rgba(255,255,255,.7);font:inherit;font-size:clamp(20px,2.4vw,30px);color:#1c1917;cursor:pointer;padding:0}
+#ttt button:hover{background:#fff}
+.trow{display:flex;justify-content:space-between;align-items:center;font-size:.8em}
+#tttr{border:0;border-radius:6px;background:#1c1917;color:#fffef8;font:600 12px Figtree,sans-serif;padding:4px 8px;cursor:pointer}
+a.sblink{display:block;text-decoration:none;cursor:pointer;text-align:center}
+a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8px;background:#1c1917;color:#fffef8;font:700 14px Figtree,sans-serif}
+@media (max-width:760px){.hide-sm{display:none}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=VT323&family=Baloo+2:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700&family=Patrick+Hand&display=swap">
 </head>
 <body>
 <canvas id="c" aria-label="FFC"></canvas>
@@ -60,8 +86,8 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 let PX=1,W,H,stars=[],shoot=[],lw=0,lh=0,ox=0,oy=0,ready=false;
 let time=0,last=null,nextShoot=1.2;
-// sprite geometry (sprite px = base*2)
-const S=2,FX0=98*S,FX1=262*S,FY0=38*S,FY1=112*S,CX=180*S,CY=75*S,HW=(FX1-FX0)/2,HH=(FY1-FY0)/2,UC=HW/(HW+HH);
+// sprite geometry (sprite px = base*1.5 (540x225 grid))
+const S=1.5,FX0=Math.round(98*S),FX1=Math.round(262*S),FY0=Math.round(38*S),FY1=Math.round(112*S),CX=Math.round(180*S),CY=Math.floor(75*S),HW=(FX1-FX0)/2,HH=(FY1-FY0)/2,UC=HW/(HW+HH);
 const CORN=[[FX0,FY0],[FX1,FY0],[FX0,FY1],[FX1,FY1]];
 // timeline (seconds)
 const T_LET=2.2, T_FLASH1=2.25, T_FAN=2.55, T_EDGE=2.75, D_EDGE=1.7, T_BR=4.6, D_BR=1.45, T_FIN=6.2;
@@ -95,9 +121,9 @@ let pageH=4000,hintOn=null;
 let PXs=-1e4,PYs=-1e4,sc=0,baseOy=0,hintEl=document.getElementById('hint'),scrolled=false;
 let letters=[],chunks=[],others=[],logoC,logoX,logoD,buf,full;
 function resize(){
-  const lwv=lw||720,lhv=lh||300;
-  const p=Math.min(innerWidth*.95/lwv,innerHeight*.6/lhv);PX=p>=1?Math.min(6,Math.floor(p)):(p>=.5?.5:1/3);
-  PX=Math.min(PX*1.5,innerWidth*.97/((FX1-FX0)+24),innerHeight*.92/lhv); // 50% larger; frame always fits width
+  const lwv=lw||540,lhv=lh||225;
+  const p=Math.min(innerWidth*.95/720,innerHeight*.6/300);PX=p>=1?Math.min(6,Math.floor(p)):(p>=.5?.5:1/3);
+  PX=Math.min(PX*1.5*(720/lwv)*1.3,innerWidth*.97/((FX1-FX0)+18),innerHeight*.95/lhv); // chunkier 540-grid, 30% larger; frame always fits width // 50% larger; frame always fits width
   W=Math.ceil(innerWidth/PX);H=Math.ceil(innerHeight/PX);cv.width=W;cv.height=H;
   const n=Math.round(W*H/120*Math.min(1,PX*PX/4));stars=[];
   for(let i=0;i<n;i++)stars.push({x:Math.random()*W,y:Math.random()*H,p:Math.random()*6.28,s:.6+Math.random()*2,v:.3+Math.random()*1.5,big:Math.random()<.06});
@@ -280,5 +306,22 @@ function frame(ts){
   <div id="boot"><div class="bt">Starting Archive of Things...</div><div class="bar"><div id="bfill"></div></div></div>
 </section>
 <script src="scene.js"></script>
+<section id="sticky" aria-label="Sticky Board">
+  <div id="sboard"></div>
+  <canvas id="splat" aria-hidden="true"></canvas>
+  <div id="sextras">
+    <img class="meme" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/maxwell.png" alt="maxwell" style="left:9%;top:24%;--r:-8deg">
+    <img class="meme" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/doge.png" alt="doge" style="left:63%;top:80%;--r:7deg">
+    <img class="meme hide-sm" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/cheems.png" alt="cheems" style="left:36%;top:80%;--r:5deg">
+    <img class="meme" src="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/pog.png" alt="pog" style="left:72%;top:20%;--r:-4deg">
+    <div class="tnote" style="left:12%;top:74%;--r:3deg;background:#B8F2E6;width:clamp(120px,13vw,160px)"><div>Tic-tac-toe</div><div id="ttt"><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button><button aria-label="square"></button></div><div class="trow"><span id="tttst">X to move</span><button id="tttr">Reset</button></div></div>
+    <div class="tnote hide-sm" style="left:42%;top:17%;--r:-3deg;background:#FFD6A5">stick a note, any note :)</div>
+    <div class="tnote hide-sm" style="left:90%;top:20%;--r:2deg;background:#CDB4DB">hi from the wall 👋</div>
+    <a class="tnote sblink" href="https://rainbowroar14.github.io/FinleyChang.com-Unblocked24/" target="_blank" rel="noopener" style="left:87%;top:77%;--r:4deg;background:#FFE566">Come stick a note!<br><b>Open Sticky Board →</b></a>
+  </div>
+  <div id="sword"></div>
+</section>
+<script src="sticky.js"></script>
+
 </body>
 </html>
