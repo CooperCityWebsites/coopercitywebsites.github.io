@@ -103,7 +103,7 @@ function radialFlash(cx,cy,R,f,warm){
 // ---- rose petals (pixel sprites)
 // minimal petals: 3-5 px teardrops/ovals, 1-2 flat shades
 const PETAL_SHAPES=[[".O","OO","HO"],["OO","OH",".O"],[".O.","OHO",".O."],["OO","HO"],["O.","OH",".O"]];
-const PETAL_COLS=[["#d81e3c","#f0506a"],["#e8436a","#f7809a"],["#b5122e","#d8304c"],["#f2789a","#f2789a"]];
+const PETAL_COLS=[["#7a0c14","#5c0810"],["#7a0c14","#7a0c14"]]; // single dark red (+ one darker shade)
 const petalSprites=[];
 for(const sh of PETAL_SHAPES)for(const [o,h] of PETAL_COLS){
   const c=document.createElement('canvas');c.width=sh[0].length;c.height=sh.length;const x=c.getContext('2d');
@@ -114,7 +114,7 @@ function makePetal(x,y,burst){
   const a=Math.random()*6.283,sp=burst?(380+Math.random()*520):0;
   return {x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*.75-(burst?40:0),img:petalSprites[Math.random()*petalSprites.length|0],
     ph:Math.random()*6.283,fr:1.2+Math.random()*1.6,sw:10+Math.random()*16,flip:2+Math.random()*3,
-    rot:Math.random()*6.283,vr:(Math.random()-.5)*3,term:22+Math.random()*18,life:0,sc:2};}
+    rot:Math.random()*6.283,vr:(Math.random()-.5)*3,term:22+Math.random()*18,life:0,sc:3};}
 function updatePetals(dt){
   if(!petalBurst&&time>=T_FIN){petalBurst=true;const n=40+(Math.random()*30|0);for(let i=0;i<n;i++)petals.push(makePetal(ox+CX,oy+CY,true));nextPetal=1.5;}
   if(petalBurst){nextPetal-=dt;if(nextPetal<=0){petals.push(makePetal(Math.random()*W,-6,false));nextPetal=.6+Math.random()*1.2;}}
