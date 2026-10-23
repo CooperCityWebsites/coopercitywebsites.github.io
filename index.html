@@ -15,6 +15,8 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 
 #c{z-index:0}
 #hint{z-index:3}
+#sub{position:absolute;left:50%;transform:translateX(-50%);height:auto;image-rendering:pixelated;z-index:3;pointer-events:none;opacity:0;clip-path:inset(0 50% 0 50%);transition:opacity .4s steps(4),clip-path .7s steps(14)}
+#sub.on{opacity:1;clip-path:inset(0 0 0 0)}
 #scene{position:absolute;left:0;top:170vh;width:100%;height:min(92vh,66.6vw);overflow:hidden;z-index:1;-webkit-mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.25) 6%,rgba(0,0,0,.7) 13%,#000 21%,#000 79%,rgba(0,0,0,.7) 87%,rgba(0,0,0,.25) 94%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.25) 6%,rgba(0,0,0,.7) 13%,#000 21%,#000 79%,rgba(0,0,0,.7) 87%,rgba(0,0,0,.25) 94%,transparent 100%)}
 /* pixel-style dithered band over the fades (static, cached by the compositor) */
 #scene::before,#scene::after{content:'';position:absolute;left:0;right:0;height:14%;z-index:5;pointer-events:none;image-rendering:pixelated;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%2307060d'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%2307060d'/%3E%3C/svg%3E");background-size:4px 4px;opacity:.55}
@@ -133,6 +135,7 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 </head>
 <body>
 <canvas id="c" aria-label="FFC"></canvas>
+<img id="sub" src="px/sub.png?v=9cb6de86" alt="Cooper City's Unofficial Websites" width="480" height="18">
 <div id="hint">scroll down<svg width="14" height="9" viewBox="0 0 14 9"><path d="M1 1l6 6 6-6" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
 <script>
 (()=>{
@@ -183,6 +186,7 @@ function resize(){
   window.FFC_PX=PX;pageH=document.documentElement.scrollHeight/PX;const ex=innerWidth/PX/2-(FX0+FX1+1)/2,ey=innerHeight/PX/2-(FY0+FY1+1)/2;ox=Math.floor(ex)+1;baseOy=Math.floor(ey)+1;oy=baseOy;
   W=Math.ceil(innerWidth/PX)+2;H=Math.ceil(innerHeight/PX)+2;cv.width=W;cv.height=H; // exact centring: integer canvas px + sub-px css shift, no stretch
   cv.style.width=(W*PX)+'px';cv.style.height=(H*PX)+'px';cv.style.left=((ex-ox)*PX)+'px';cv.style.top=((ey-baseOy)*PX)+'px';window.FFC_GEOM={ox,oy:baseOy,lw,lh,FX0,FX1,FY0,FY1};
+  {const se=document.getElementById('sub'),sw=Math.min(innerWidth*.92,Math.max((FX1-FX0)*PX*.8,360));se.style.width=sw+'px';se.style.top=(innerHeight/2+(FY1-FY0+1)/2*PX+Math.max(14,PX*20))+'px';}
 }
 addEventListener('resize',resize);
 function load(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
@@ -284,7 +288,7 @@ function frame(ts){
   time+=dt;
   updatePointer(dt);PXs=ptr.cx/PX;PYs=ptr.cy/PX;
   sc=scrollY/PX; oy=baseOy-Math.round(sc); if(scrollY>20)scrolled=true;
-  {const on=(time>T_FIN+1&&!scrolled&&scrollY<20);if(on!==hintOn){hintOn=on;hintEl.style.opacity=on?'0.85':'0';}}
+  {const on=(time>T_FIN+1&&!scrolled&&scrollY<20);if(time>T_FIN+.2&&!window.__subOn){window.__subOn=1;document.getElementById('sub').classList.add('on');}if(on!==hintOn){hintOn=on;hintEl.style.opacity=on?'0.85':'0';}}
   ctx.globalAlpha=1;ctx.fillStyle='#07060d';ctx.fillRect(0,0,W,H);
   for(const s of stars){
     s.x-=s.v*dt;if(s.x<0)s.x+=W;
