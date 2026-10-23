@@ -53,7 +53,7 @@ canvas{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated
 #sticky{position:absolute;left:0;top:290vh;width:100%;height:max(110vh,660px);overflow:hidden;z-index:1;font-family:"Patrick Hand",cursive}
 #sboard{position:absolute;inset:0;background-color:#fff;background-image:radial-gradient(#e7e5e4 1.3px,transparent 1.3px);background-size:28px 28px;opacity:0;transition:opacity .25s}
 
-#splat{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+#splat{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;image-rendering:auto}
 #sword{position:absolute;inset:0;z-index:4;pointer-events:none}
 .lnote{position:absolute;left:0;top:0;width:var(--ns,80px);height:var(--ns,80px);display:grid;place-items:center;font-size:calc(var(--ns,80px)*.68);line-height:1;color:#1c1917;border-radius:3px;box-shadow:0 1px 0 rgba(28,25,23,.05),0 10px 22px rgba(0,0,0,.28);opacity:0;will-change:transform}
 .mouse{position:absolute;left:0;top:0;z-index:5;pointer-events:none;opacity:0;will-change:transform;transform-origin:0 0}
@@ -323,7 +323,7 @@ function frame(ts){
   </div>
   <div id="sword"></div>
 </section>
-<script src="sticky.js?v=546110cf"></script>
+<script src="sticky.js?v=7040a21d"></script>
 
 </body>
 </html>

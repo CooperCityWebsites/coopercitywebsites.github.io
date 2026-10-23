@@ -33,42 +33,40 @@ function targets(){
 function place(it,x,y,rot,s){it.n.style.transform=`translate(${x}px,${y}px) translate(-50%,-50%) rotate(${rot}deg) scale(${s})`;}
 function mouse(it,x,y,sq,show){it.m.style.opacity=show?1:0;it.m.style.transform=`translate(${x}px,${y}px) scale(${1+sq},${1-sq})`;}
 // --- splat (smooth closed curve through lobed points + metaball-ish satellite blobs)
-// ---- blocky pixel splash: shape rasterised on a coarse grid (BK css px per block), hard edges, drips + square specks
-const BK=8;let G=null,gx=null,gw=0,gh=0,mask=null,rim=null;
-function mkPat(){const c=document.createElement('canvas');c.width=c.height=28;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,28,28);g.fillStyle='#e7e5e4';g.fillRect(13,13,2,2);return cx.createPattern(c,'repeat');}
-function seedSplat(){blobs=[];drops=[];const L=16;blobs.push({ph:[...Array(L)].map(()=>rnd(.82,1.2))});
-  for(let i=0;i<34;i++)drops.push({a:rnd(0,6.283),v:rnd(.06,.3),s:rnd(1,3)|0,dl:rnd(0,.25)});
-  blobs.drips=[...Array(9)].map(()=>({x:rnd(-.8,.8),len:rnd(3,9)|0,w:rnd(1,3)|0,dl:rnd(.5,.9)}));}
-function grid(){gw=Math.ceil(W/BK);gh=Math.ceil(H/BK);G=document.createElement('canvas');G.width=gw;G.height=gh;gx=G.getContext('2d',{willReadFrequently:true});
-  mask=document.createElement('canvas');mask.width=gw;mask.height=gh;rim=document.createElement('canvas');rim.width=gw;rim.height=gh;}
-function inside(nx,ny,k,ph){ // normalised splat test (lobed superellipse-ish), k = growth 0..~1.1
-  const a=Math.atan2(ny,nx),L=ph.length,f=(a/6.283+1)%1*L,i0=f|0,fr=f-i0,w=ph[i0%L]*(1-fr)+ph[(i0+1)%L]*fr;
-  return Math.hypot(nx,ny)<k*w;}
-function rasterSplat(u){ // binary block masks (core + 1-block rim), cheap at ~160x90
-  const k=.04+.96*elastic(u/1.25),ph=blobs[0].ph,rx=gw*.47,ry=gh*.42,cxg=gw/2,cyg=gh/2;
-  const md=gx.createImageData(gw,gh),rd=gx.createImageData(gw,gh),M=new Uint8Array(gw*gh);
-  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++)if(inside((x+.5-cxg)/rx,(y+.5-cyg)/ry,k,ph))M[y*gw+x]=1;
-  for(const d of blobs.drips){const e=clamp((u-d.dl)/.8);if(e<=0)continue;const x0=Math.round(cxg+d.x*rx*k);let yb=cyg;while(yb<gh-1&&M[(yb|0)*gw+x0])yb++;
-    const len=Math.round(d.len*ease(e));for(let yy=0;yy<len;yy++)for(let w=0;w<d.w-(yy>len-2?1:0);w++){const xx=x0+w,Y=(yb|0)+yy;if(xx>=0&&xx<gw&&Y<gh)M[Y*gw+xx]=1;}}
-  for(const d of drops){const e=clamp((u-d.dl)/1);if(e<=0)continue;const dist=k*(1.04+d.v*ease(e)),x0=Math.round(cxg+Math.cos(d.a)*dist*rx),y0=Math.round(cyg+Math.sin(d.a)*dist*ry);
-    for(let yy=0;yy<d.s;yy++)for(let xx=0;xx<d.s;xx++){const X=x0+xx,Y=y0+yy;if(X>=0&&Y>=0&&X<gw&&Y<gh)M[Y*gw+X]=1;}}
-  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){const i=y*gw+x;
-    if(M[i]){const e=!(M[i-1]&&M[i+1]&&M[i-gw]&&M[i+gw]);const o=i*4;if(e){rd.data[o+3]=255;}else md.data[o+3]=255;}}
-  mask.getContext('2d').putImageData(md,0,0);rim.getContext('2d').putImageData(rd,0,0);}
+// ---- smooth cartoon splat: rounded central blob + tapered limbs ending in round bulbs + droplets (anti-aliased vector paths)
+function mkPat(){const c=document.createElement('canvas');c.width=c.height=28;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,28,28);g.fillStyle='#e7e5e4';g.beginPath();g.arc(14,14,1.3,0,7);g.fill();return cx.createPattern(c,'repeat');}
+const backE=(t,c=1.7)=>{t=clamp(t);const u=t-1;return 1+(c+1)*u*u*u+c*u*u;};
+function seedSplat(){blobs=[];drops=[];const L=14;blobs.push({ph:[...Array(L)].map(()=>rnd(1,1.1))});
+  const n=9,limbs=[];for(let i=0;i<n;i++){const a=i/n*6.283+rnd(-.25,.25);limbs.push({a,len:rnd(.35,1),w:rnd(.07,.12),bulb:rnd(.45,.75),dl:rnd(.12,.4),bend:rnd(-.25,.25)});}
+  blobs.limbs=limbs;for(let i=0;i<7;i++)drops.push({a:rnd(0,6.283),d:rnd(1.05,1.3),r:rnd(5,13),dl:rnd(.25,.5)});}
+function rayMax(ox,oy,dx,dy,m){let t=1e9;if(dx>0)t=Math.min(t,(W-m-ox)/dx);if(dx<0)t=Math.min(t,(m-ox)/dx);if(dy>0)t=Math.min(t,(H-m-oy)/dy);if(dy<0)t=Math.min(t,(m-oy)/dy);return Math.max(0,t);}
+function shapes(u){ // returns path builders in css px
+  const ox=W/2,oy=H/2,rx=W*.47,ry=H*.45,k=backE(u/.9),ph=blobs[0].ph,L=ph.length,list=[],gl=[];let P=new Path2D();list.push(P);const pts=[];
+  const wob=1-clamp(u/1.2);
+  for(let i=0;i<L;i++){const a=i/L*6.283,w=ph[i]+.04*Math.sin(u*10+i*1.7)*wob;pts.push([ox+Math.cos(a)*rx*k*w,oy+Math.sin(a)*ry*k*w]);}
+  const n=pts.length;P.moveTo((pts[0][0]+pts[n-1][0])/2,(pts[0][1]+pts[n-1][1])/2);
+  for(let i=0;i<n;i++){const p=pts[i],q=pts[(i+1)%n];P.quadraticCurveTo(p[0],p[1],(p[0]+q[0])/2,(p[1]+q[1])/2);}P.closePath();
+  const S=Math.min(W,H);
+  for(const l of blobs.limbs){const e=backE((u-l.dl)/.6,2.2);if(e<=0)continue;
+    const dx=Math.cos(l.a),dy=Math.sin(l.a),bx=ox+dx*rx*k*.9,by=oy+dy*ry*k*.9; // base inside blob edge
+    const br=S*.035*l.bulb*(.6+.4*e)+6,lenMax=rayMax(bx,by,dx,dy,br+4),len=Math.min(lenMax,S*.38*l.len+40)*e;
+    const tx=bx+dx*len,ty=by+dy*len,nx=-dy,ny=dx,wb=S*l.w*(.7+.3*e),wn=Math.max(3,br*.42),mx=(bx+tx)/2+nx*len*l.bend*.3,my=(by+ty)/2+ny*len*l.bend*.3;
+    P=new Path2D();list.push(P);P.moveTo(bx+nx*wb,by+ny*wb);P.quadraticCurveTo(mx+nx*wn*1.1,my+ny*wn*1.1,tx+nx*wn,ty+ny*wn);P.lineTo(tx-nx*wn,ty-ny*wn);
+    P.quadraticCurveTo(mx-nx*wn*1.1,my-ny*wn*1.1,bx-nx*wb,by-ny*wb);P.closePath();
+    P=new Path2D();list.push(P);P.arc(tx,ty,br,0,6.283);gl.push([tx,ty,br]);}
+  for(const d of drops){const e=backE((u-d.dl)/.6,1.4);if(e<=0)continue;const dist=Math.min(d.d*e,1.4),x=ox+Math.cos(d.a)*rx*dist,y=oy+Math.sin(d.a)*ry*dist,r=d.r*Math.min(1,e);
+    if(x<r||y<r||x>W-r||y>H-r)continue;P=new Path2D();list.push(P);P.arc(x,y,r,0,6.283);gl.push([x,y,r]);}
+  return [list,gl];}
 function drawSplat(u){
-  rasterSplat(u);cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,W,H);cx.imageSmoothingEnabled=false;
-  const S=BK;cx.globalCompositeOperation='source-over';
-  cx.drawImage(rim,0,0,gw*S,gh*S);cx.globalCompositeOperation='source-in';cx.fillStyle='#FF8FAB';cx.fillRect(0,0,W,H); // pink block rim
-  cx.globalCompositeOperation='destination-over';cx.drawImage(mask,0,0,gw*S,gh*S);
-  // fill core with board pattern: draw core mask on temp, tint
-  cx.globalCompositeOperation='source-over';
-  if(!blobs.tmp){blobs.tmp=document.createElement('canvas');}
-  const T=blobs.tmp;if(T.width!==Math.ceil(W)||T.height!==Math.ceil(H)){T.width=Math.ceil(W);T.height=Math.ceil(H);}const tx=T.getContext("2d");tx.globalCompositeOperation="source-over";tx.clearRect(0,0,T.width,T.height);tx.imageSmoothingEnabled=false;
-  tx.drawImage(mask,0,0,gw*S,gh*S);tx.globalCompositeOperation='source-in';tx.fillStyle=pat;tx.fillRect(0,0,W,H);
-  tx.globalCompositeOperation='source-over';tx.fillStyle='#FFE566';  // yellow inner block band (stepped) just inside the rim
-  cx.drawImage(T,0,0);
+  const [list,gl]=shapes(u);cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,W,H);cx.lineJoin='round';cx.lineCap='round';
+  cx.fillStyle=cx.strokeStyle='#FF8FAB';cx.lineWidth=12;for(const P of list){cx.fill(P);cx.stroke(P);}   // pink rim
+  cx.strokeStyle='#FFE566';cx.lineWidth=5;for(const P of list)cx.stroke(P);                          // yellow inner band
+  cx.fillStyle=pat;for(const P of list)cx.fill(P);                                                     // dotted board (covers inner seams)
+  cx.strokeStyle='rgba(255,255,255,.9)';cx.lineWidth=2.5;                                             // glossy highlights
+  for(const [x,y,r] of gl){if(r<5)continue;cx.beginPath();cx.arc(x,y,r+3,Math.PI*1.1,Math.PI*1.45);cx.stroke();}
+  const k=backE(u/.9);cx.lineWidth=3;cx.beginPath();cx.ellipse(W/2,H/2,W*.47*k*1.0+3,H*.45*k*1.0+3,0,Math.PI*1.12,Math.PI*1.3);cx.stroke();
 }
-function resize(){const r=sec.getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(1.5,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;grid();if(!pat)pat=mkPat();}
+function resize(){const r=sec.getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(1.5,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;if(!pat)pat=mkPat();}
 function finalState(){state=3;sec.classList.add('done');targets();resize();if(!blobs.length)seedSplat();drawSplat(3); // splash stays as the final hard-edged shape
   items.forEach(it=>{place(it,it.tx,it.ty,+it.n.dataset.tilt,1);it.n.style.opacity=1;mouse(it,0,0,0,false);});}
 function visible(){const r=sec.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;}
