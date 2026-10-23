@@ -31,3 +31,9 @@ Clouds (cut out with make_clouds.py, then pixelated: stock/cloud_1-7.png):
 ## Underground strata (stock/strata.png, built by make_under.py)
 Public Domain textures by Titus Tscharntke (via Wikimedia Commons / publicdomainpictures): Ground_dirt.jpg (topsoil), Light_brown_earth_texture_jpg.jpg (clay), Rock_texture_1_jpg.jpg (rock), Stone_rock_texture_closeup_jpg.jpg (deep rock), Small_stones.jpg (pebble cutouts). Roots, worms, fossils and crystals are hand-drawn pixel art.
 stock/llc-preview.jpg is a screenshot of https://landrcy.github.io/ that's used as the portal preview.
+
+## Floating island (stock/island.png, stock/rockbit0-3.png, built by make_island.py)
+Public Domain textures by Titus Tscharntke: Ground_dirt.jpg, Light_brown_earth_texture_jpg.jpg, Rock_texture_1_jpg.jpg. Roots and vines are hand-drawn pixel art.
+
+## LLC section (llc/)
+The logo, the Binding of Ashaad sprites and screenshot, and the Game of Websites disc all come from https://landrcy.github.io/ (the logo is the site's own rendered monogram canvas). The Eternal Ball Fight image is a screenshot of that site's arena.
