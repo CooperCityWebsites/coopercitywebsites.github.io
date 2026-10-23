@@ -30,7 +30,7 @@ const T_LET=2.2, T_FLASH1=2.25, T_FAN=2.55, T_EDGE=2.75, D_EDGE=1.7, T_BR=4.6, D
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const easeOutQuint=t=>1-Math.pow(1-t,5), easeOutBack=t=>{const c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);};
 const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, easeOutCubic=t=>1-Math.pow(1-t,3);
-let baseOy=0,hintEl=document.getElementById('hint'),scrolled=false;
+let sc=0,baseOy=0,hintEl=document.getElementById('hint'),scrolled=false;
 let letters=[],chunks=[],others=[],logoC,logoX,logoD,buf,full;
 function resize(){
   const lwv=lw||720,lhv=lh||300;
@@ -116,29 +116,30 @@ function makePetal(x,y,burst){
     ph:Math.random()*6.283,fr:1.2+Math.random()*1.6,sw:10+Math.random()*16,flip:2+Math.random()*3,
     rot:Math.random()*6.283,vr:(Math.random()-.5)*3,term:22+Math.random()*18,life:0,sc:3};}
 function updatePetals(dt){
-  if(!petalBurst&&time>=T_FIN){petalBurst=true;const n=40+(Math.random()*30|0);for(let i=0;i<n;i++)petals.push(makePetal(ox+CX,oy+CY,true));nextPetal=1.5;}
-  if(petalBurst){nextPetal-=dt;if(nextPetal<=0){petals.push(makePetal(Math.random()*W,-6,false));nextPetal=.6+Math.random()*1.2;}}
+  if(!petalBurst&&time>=T_FIN){petalBurst=true;const n=40+(Math.random()*30|0);for(let i=0;i<n;i++)petals.push(makePetal(ox+CX,oy+CY+sc,true));nextPetal=1.5;}
+  if(petalBurst){nextPetal-=dt;if(nextPetal<=0){petals.push(makePetal(ox+CX+(Math.random()-.5)*Math.max(lw*1.3,W*.8),baseOy-20-Math.random()*40,false));nextPetal=.6+Math.random()*1.2;}}
   ctx.imageSmoothingEnabled=false;
   for(let i=petals.length-1;i>=0;i--){const p=petals[i];p.life+=dt;
     const drag=Math.exp(-2.4*dt);p.vx*=drag;p.vy*=drag;           // air drag kills burst force
     p.vy+=22*dt; if(p.vy>p.term)p.vy+=(p.term-p.vy)*(1-Math.exp(-3*dt)); // low gravity, small terminal velocity
     const sway=Math.sin(p.ph+p.life*p.fr)*p.sw;                   // feather flutter
     p.x+=(p.vx+sway)*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt;
-    const fade=clamp((H-p.y)/(H*.25));if(p.y>H+10||fade<=0){petals.splice(i,1);continue;}
+    const pageH=document.documentElement.scrollHeight/PX,fade=clamp((pageH-p.y)/(H*.4));if(p.y>pageH+10||fade<=0){petals.splice(i,1);continue;}
+    const sy=p.y-sc;if(sy<-20||sy>H+20)continue; // off-screen: keep simulating, skip drawing
     const fl=Math.cos(p.life*p.flip+p.ph);                         // flip (scaleX oscillation)
-    ctx.save();ctx.globalAlpha=fade*clamp(p.life/.08);ctx.translate(Math.round(p.x),Math.round(p.y));ctx.rotate(Math.round(p.rot/(Math.PI/4))*(Math.PI/4)+Math.sin(p.life*p.fr)*.3);
+    ctx.save();ctx.globalAlpha=fade*clamp(p.life/.08);ctx.translate(Math.round(p.x),Math.round(sy));ctx.rotate(Math.round(p.rot/(Math.PI/4))*(Math.PI/4)+Math.sin(p.life*p.fr)*.3);
     ctx.scale((Math.abs(fl)<.2?.2*Math.sign(fl||1):fl)*p.sc,p.sc);ctx.drawImage(p.img,-p.img.width/2|0,-p.img.height/2|0);ctx.restore();}
 }
 function spawnShoot(){
   const fromLeft=Math.random()<.5,sp=140+Math.random()*120;
   const ang=(fromLeft?0:Math.PI)+(fromLeft?1:-1)*(.25+Math.random()*.35);
-  shoot.push({x:fromLeft?-10:W+10,y:Math.random()*H*.5,vx:Math.cos(ang)*sp,vy:Math.abs(Math.sin(ang))*sp,life:0,max:1.2+Math.random()*.8,trail:[]});
+  shoot.push({x:fromLeft?-10:W+10,y:Math.random()*(document.documentElement.scrollHeight/PX),vx:Math.cos(ang)*sp,vy:Math.abs(Math.sin(ang))*sp,life:0,max:1.2+Math.random()*.8,trail:[]});
 }
 function frame(ts){
   if(last===null)last=ts;let dt=(ts-last)/1000;last=ts;dt=Math.min(Math.max(dt,0),1/20);
   if(!ready){requestAnimationFrame(frame);return;}
   time+=dt;
-  const sc=scrollY/PX; oy=baseOy-Math.round(sc); if(scrollY>20)scrolled=true;
+  sc=scrollY/PX; oy=baseOy-Math.round(sc); if(scrollY>20)scrolled=true;
   hintEl.style.opacity=(time>T_FIN+1&&!scrolled&&scrollY<20)?'0.85':'0';
   ctx.globalAlpha=1;ctx.fillStyle='#07060d';ctx.fillRect(0,0,W,H);
   for(const s of stars){
@@ -147,11 +148,11 @@ function frame(ts){
     const x=s.x|0,y=(((s.y-sc*.35)%H)+H)%H|0,ss=PX<2?2:1;ctx.fillRect(x,y,ss,ss);
     if(s.big&&b>.7){ctx.fillStyle=`rgba(150,160,220,${(b-.5)*1.5})`;ctx.fillRect(x-1,y,1,1);ctx.fillRect(x+1,y,1,1);ctx.fillRect(x,y-1,1,1);ctx.fillRect(x,y+1,1,1);}
   }
-  nextShoot-=dt;if(nextShoot<=0){spawnShoot();nextShoot=3+Math.random()*5;}
+  nextShoot-=dt;if(nextShoot<=0){spawnShoot();nextShoot=.8+Math.random()*1.6;}
   for(let i=shoot.length-1;i>=0;i--){const s=shoot[i];s.life+=dt;s.x+=s.vx*dt;s.y+=s.vy*dt;s.trail.push([s.x,s.y]);if(s.trail.length>40)s.trail.shift();
     const fade=Math.min(1,(s.max-s.life)/.4);
-    for(let k=0;k<s.trail.length;k++){const a=(k/s.trail.length)*fade;ctx.fillStyle=k>s.trail.length-3?`rgba(255,255,255,${a})`:`rgba(200,215,255,${a})`;ctx.fillRect(Math.round(s.trail[k][0]),Math.round(s.trail[k][1]),1,1);}
-    if(s.life>s.max||s.x<-50||s.x>W+50||s.y>H+50)shoot.splice(i,1);}
+    for(let k=0;k<s.trail.length;k++){const a=(k/s.trail.length)*fade;ctx.fillStyle=k>s.trail.length-3?`rgba(255,255,255,${a})`:`rgba(200,215,255,${a})`;ctx.fillRect(Math.round(s.trail[k][0]),Math.round(s.trail[k][1]-sc),1,1);}
+    if(s.life>s.max||s.x<-50||s.x>W+50||s.y>document.documentElement.scrollHeight/PX+50)shoot.splice(i,1);}
   const cx=ox+CX,cy=oy+CY,R=Math.max(W,H)*.75;
   // 1) letters fly in
   if(time<T_LET+.05){const prog=time/T_LET;
