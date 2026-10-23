@@ -1,67 +1,38 @@
-// Casino showcase for RNG ("Test Your Luck"): neon flicker, chasing marquee bulbs, self-pulling slot machine landing a
-// jackpot, coin/chip burst, felt table with dice + rarity cards, big chip PLAY button. Delta time, idle while off-screen.
+// Sol's RNG-style roll for the RNG site ("Test Your Luck"): rarities flick by and slow down, then a rare-aura cutscene
+// (darken, light beam, ring shockwave, particles, flash) reveals 'Test Your Luck  1 / ∞'. Delta time; idle while off-screen.
 (()=>{
-const sec=document.getElementById('casino'),stage=document.getElementById('cstage'),cv=document.getElementById('coins'),g=cv.getContext('2d');
-const reels=[...sec.querySelectorAll('.reel .strip')],lever=document.getElementById('lever'),res=document.getElementById('cres');
-const SYM=['7','★','♦','BAR','♣','$','♥','★','♦','$','BAR','♣'],N=SYM.length,SH=110; // symbol height px (stage units)
-const RAR=[['OBLIVION','1 in 1,000,000,000'],['ESCHATON','1 in 500,000,000'],['APOCALYPSE','1 in 250,000,000'],['RAPTURE','1 in 200,000,000'],['DIVINITY','1 in 100,000,000'],['PARADOX','1 in 25,000,000']];
-const cls=s=>s==='7'?'s7':s==='★'?'sst':s==='♦'||s==='♥'?'sred':s==='BAR'?'sbar':'sgrn';
-reels.forEach(st=>{for(let k=0;k<2;k++)for(const s of SYM){const d=document.createElement('div');d.className='sym '+cls(s);d.textContent=s;st.append(d);}});
-// marquee bulbs around the stage frame
-const fr=document.getElementById('cframe');function bulbs(){fr.innerHTML='';const w=stage.offsetWidth,h=stage.offsetHeight,step=34,per=2*(w+h);const n=Math.floor(per/step);
-  for(let i=0;i<n;i++){let d=i*per/n,x,y;if(d<w){x=d;y=0}else if((d-=w)<h){x=w;y=d}else if((d-=h)<w){x=w-d;y=h}else{d-=w;x=0;y=h-d}
-    const b=document.createElement('i');b.style.left=x+'px';b.style.top=y+'px';b.style.animationDelay=(-(i%3)*.18)+'s';fr.append(b);}}
-let state=0,t=0,W=0,H=0,DPR=1,spin=null,parts=[],dieT=-1;
-const ease=x=>1-Math.pow(1-x,3),clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),backE=(x,c=1.8)=>{x=clamp(x);const u=x-1;return 1+(c+1)*u*u*u+c*u*u;};
-function layout(){const r=sec.getBoundingClientRect();W=r.width;H=r.height;const port=W/H<.8;stage.classList.toggle('port',port);
-  const sw=port?420:1000,sh=port?820:600,s=Math.min(W*.96/sw,H*.94/sh);stage.style.transform=`translate(-50%,-50%) scale(${s})`;
-  DPR=Math.min(1.5,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;bulbs();}
-// ---- slot machine
-const pos=[0,0,0];reels.forEach((st,i)=>{pos[i]=i*3;st.style.transform=`translateY(${-pos[i]*SH}px)`;});
-function startSpin(jack){if(spin&&!spin.done)return;lever.classList.remove('pull');void lever.offsetWidth;lever.classList.add('pull');
-  res.classList.remove('on','big');const tgt=jack?[0,0,0]:[0,1,2].map(()=>Math.random()*N|0);if(!jack&&tgt[0]===tgt[1]&&tgt[1]===tgt[2])tgt[2]=(tgt[2]+3)%N;
-  spin={t:0,stop:[1.1,1.5,1.9],tgt,from:[null,null,null],dest:[0,0,0],done:false,jack:tgt[0]===tgt[1]&&tgt[1]===tgt[2]};}
-function stepSpin(dt){if(!spin||spin.done)return;spin.t+=dt;let all=true;
-  for(let i=0;i<3;i++){const s=spin.stop[i];
-    if(spin.t<s){pos[i]+=dt*16*Math.min(1,spin.t/.25);all=false;}
-    else{if(spin.from[i]===null){spin.from[i]=pos[i];let d=Math.ceil(pos[i])+2;while(((d%N)+N)%N!==spin.tgt[i])d++;spin.dest[i]=d;}
-      const k=clamp((spin.t-s)/.55);pos[i]=spin.from[i]+(spin.dest[i]-spin.from[i])*backE(k,1.4);if(k<1)all=false;}
-    reels[i].style.transform=`translateY(${-(((pos[i]%N)+N)%N)*SH}px)`;}
-  if(all){spin.done=true;for(let i=0;i<3;i++)pos[i]=spin.dest[i]%N;
-    if(spin.jack){res.innerHTML='<b>JACKPOT!</b><span>'+RAR[Math.random()*RAR.length|0].join(' · ')+'</span>';res.classList.add('on','big');burst();}
-    else{const r=RAR[RAR.length-1-(Math.random()*3|0)];res.innerHTML='<b>so close…</b><span>pull again!</span>';res.classList.add('on');}}}
-// ---- coin / chip burst (canvas, only active while particles exist)
-function burst(){const sr=stage.querySelector('.slot').getBoundingClientRect(),cr=sec.getBoundingClientRect(),x=sr.left-cr.left+sr.width/2,y=sr.top-cr.top+sr.height*.45,s=sr.width/400;
-  for(let i=0;i<80;i++){const a=-Math.PI/2+(Math.random()-.5)*2.4,v=(380+Math.random()*620)*Math.max(.5,s);
-    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:(7+Math.random()*7)*Math.max(.55,s),ph:Math.random()*6,sp:6+Math.random()*10,chip:Math.random()<.35,c:['#e11d48','#2563eb','#16a34a','#111'][i%4],life:0});}}
-function stepParts(dt){g.setTransform(DPR,0,0,DPR,0,0);g.clearRect(0,0,W,H);
-  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life+=dt;p.vy+=1400*dt;p.vx*=Math.exp(-.6*dt);p.x+=p.vx*dt;p.y+=p.vy*dt;p.ph+=p.sp*dt;
-    if(p.y>H+40||p.life>4){parts.splice(i,1);continue;}const sx=Math.abs(Math.cos(p.ph));
-    g.save();g.translate(p.x,p.y);g.scale(Math.max(.12,sx),1);
-    if(p.chip){g.fillStyle=p.c;g.beginPath();g.arc(0,0,p.r,0,6.283);g.fill();g.strokeStyle='#fff';g.lineWidth=p.r*.28;g.setLineDash([p.r*.5,p.r*.45]);g.beginPath();g.arc(0,0,p.r*.78,0,6.283);g.stroke();g.setLineDash([]);}
-    else{g.fillStyle='#b7791f';g.beginPath();g.arc(0,0,p.r,0,6.283);g.fill();g.fillStyle='#ffc440';g.beginPath();g.arc(0,0,p.r*.8,0,6.283);g.fill();g.fillStyle='#fff3b0';g.beginPath();g.arc(-p.r*.25,-p.r*.3,p.r*.22,0,6.283);g.fill();}
-    g.restore();}}
-// ---- dice + cards
-const dice=[...sec.querySelectorAll('.die')],PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
-function face(d,n){d.innerHTML='';for(let k=0;k<9;k++){const p=document.createElement('i');if(PIPS[n].includes(k))p.className='on';d.append(p);}}
-dice.forEach((d,i)=>face(d,i?3:5));
-function stepDice(dt){if(dieT<0)return;dieT+=dt;const k=dieT/1.1;
-  dice.forEach((d,i)=>{if(k<1){if(Math.random()<dt*14)face(d,1+(Math.random()*6|0));const e=ease(k);d.style.transform=`translate(${(1-e)*(-160-i*40)}px,${Math.sin(e*Math.PI*3)*-22*(1-e)}px) rotate(${(1-e)*(540+i*200)}deg)`;}
-    else{face(d,6);d.style.transform=`rotate(${i?8:-6}deg)`;}});if(k>=1)dieT=-1;}
-// ---- intro timeline
-const steps=[[0,()=>sec.classList.add('k-neon')],[.35,()=>sec.classList.add('k-lights')],[.8,()=>sec.classList.add('k-machine')],
-  [1.5,()=>startSpin(true)],[1.7,()=>{sec.classList.add('k-table');}],[2.1,()=>{dieT=0;}],[2.5,()=>sec.classList.add('k-cards')],[3.9,()=>sec.classList.add('k-chipbtn')]];
-let si=0;
-function finalState(){steps.forEach(s=>s[1]===steps[3][1]||s[1]());sec.classList.add('k-neon','k-lights','k-machine','k-table','k-cards','k-chipbtn');state=2;}
+const sec=document.getElementById('casino'),roll=document.getElementById('rroll'),nm=roll.querySelector('.nm'),od=roll.querySelector('.od');
+const cv=document.getElementById('rfx'),g=cv.getContext('2d');
+const R=[['common','1 / 2','#f4f4f4'],['uncommon','1 / 4','#8fff9a'],['rare','1 / 16','#78d2ff'],['epic','1 / 64','#c084fc'],['legendary','1 / 256','#ffc440'],['mythic','1 / 1,024','#ff5c8a'],
+ ['paradox','1 / 25,000,000','#2de65f'],['divinity','1 / 100,000,000','#fff7c2'],['rapture','1 / 200,000,000','#ffb3f0'],['apocalypse','1 / 250,000,000','#ff4d2e'],['eschaton','1 / 500,000,000','#9b8cff'],['oblivion','1 / 1,000,000,000','#b4b4b4']];
+let state=0,t=0,next=0,gap=.055,k=0,seq=[],W=0,H=0,DPR=1,parts=[],cs=0;
+function mkSeq(){seq=[];for(let i=0;i<26;i++){const p=i/26,max=Math.min(R.length-1,1+Math.floor(p*p*R.length*1.15));seq.push(R[Math.floor(Math.random()*(max+1))]);}
+  seq.push(R[9],R[10],R[11]);}
+function show(r){nm.textContent=r[0];nm.style.color=r[2];nm.style.textShadow='0 0 18px '+r[2];od.textContent=r[1];roll.classList.remove('tick');void roll.offsetWidth;roll.classList.add('tick');}
+function size(){const r=sec.getBoundingClientRect();W=r.width;H=r.height;DPR=Math.min(1.5,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;}
+function start(){state=1;t=0;next=0;gap=.045;k=0;mkSeq();sec.classList.remove('dark','reveal','done');size();}
+function fx(u){ // cutscene: u in seconds
+  g.setTransform(DPR,0,0,DPR,0,0);g.clearRect(0,0,W,H);const cx=W/2,cy=H/2,M=Math.max(W,H);
+  // light beam (vertical, widening)
+  const bw=Math.min(1,u/.6)*Math.min(W*.22,220)*(u<1.5?1:Math.max(0,1-(u-1.5)/.3));if(bw>0){const gr=g.createLinearGradient(cx-bw,0,cx+bw,0);
+    gr.addColorStop(0,'rgba(255,196,64,0)');gr.addColorStop(.5,'rgba(255,248,220,.9)');gr.addColorStop(1,'rgba(255,196,64,0)');g.fillStyle=gr;g.fillRect(cx-bw,0,bw*2,H);}
+  // particles: spiral in toward the centre, then blast out
+  for(const p of parts){let x,y;if(u<1.3){const e=Math.min(1,u/1.3),r=p.r*(1-e*e),a=p.a+e*4;x=cx+Math.cos(a)*r;y=cy+Math.sin(a)*r;}
+    else{const e=(u-1.3)*1.6;x=cx+Math.cos(p.a)*e*M*p.v;y=cy+Math.sin(p.a)*e*M*p.v;}
+    g.fillStyle=p.c;g.fillRect(x-p.s/2,y-p.s/2,p.s,p.s);}
+  // ring shockwaves
+  for(const [t0,col] of [[1.3,'#ffc440'],[1.45,'#2de65f']]){const e=(u-t0)/.7;if(e>0&&e<1){g.strokeStyle=col;g.globalAlpha=1-e;g.lineWidth=10*(1-e)+2;g.beginPath();g.arc(cx,cy,e*M*.6,0,6.283);g.stroke();g.globalAlpha=1;}}
+  // flash
+  const f=u<1.3?0:Math.max(0,1-(u-1.3)/.45);if(f>0){g.fillStyle=`rgba(255,255,255,${f})`;g.fillRect(0,0,W,H);}}
 function visible(){const r=sec.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;}
-let vis=false;
-function hook(dt){const v=visible();if(v!==vis){vis=v;sec.classList.toggle('run',v);}   // CSS loops (bulbs, neon hum) only run on-screen
-  if(!v)return;
-  if(state===0){const r=sec.getBoundingClientRect();if(r.top<innerHeight*.5){state=1;t=0;layout();}else return;}
-  t+=Math.min(dt,.05);while(si<steps.length&&t>=steps[si][0]){steps[si][1]();si++;}
-  stepSpin(dt);stepDice(dt);if(parts.length||g._dirty){stepParts(dt);g._dirty=parts.length>0;}}
-lever.addEventListener('click',()=>{if(state>0)startSpin(Math.random()<.34);});
-lever.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();lever.click();}});
-(window.FFC_HOOKS=window.FFC_HOOKS||[]).push(hook);
-addEventListener('resize',layout);addEventListener('load',layout);layout();
+function hook(dt){
+  if(state===3||!visible())return;                      // done, or off-screen: no work
+  if(state===0){const r=sec.getBoundingClientRect();if(r.top<innerHeight*.45)start();else return;}
+  t+=Math.min(dt,.05);
+  if(state===1){if(t>=next){show(seq[k]);k++;next=t+gap;gap*=1.075;if(k>=seq.length){state=2;cs=0;sec.classList.add('dark');
+      parts=[...Array(110)].map((_,i)=>({a:Math.random()*6.283,r:Math.max(W,H)*(.35+Math.random()*.5),v:.3+Math.random()*.8,s:2+Math.random()*4,c:i%3?'#ffc440':(i%2?'#2de65f':'#fff')}));}}}
+  else if(state===2){cs+=Math.min(dt,.05);if(cs>.25)sec.classList.add('reveal');fx(cs-.25);if(cs>1.6&&!sec.classList.contains('done')){sec.classList.add('done');}
+    if(cs>2.6){g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);sec.classList.remove('dark');state=3;}}}
+document.getElementById('ragain').addEventListener('click',start);
+(window.FFC_HOOKS=window.FFC_HOOKS||[]).push(hook);addEventListener('resize',size);
 })();
