@@ -127,13 +127,15 @@ function resize(){
   W=Math.ceil(innerWidth/PX);H=Math.ceil(innerHeight/PX);cv.width=W;cv.height=H;
   const n=Math.round(W*H/120*Math.min(1,PX*PX/4));stars=[];
   for(let i=0;i<n;i++)stars.push({x:Math.random()*W,y:Math.random()*H,p:Math.random()*6.28,s:.6+Math.random()*2,v:.3+Math.random()*1.5,big:Math.random()<.06});
-  window.FFC_PX=PX;pageH=document.documentElement.scrollHeight/PX;ox=Math.round((W-lw)/2);baseOy=Math.round((H-lh)/2);oy=baseOy;
+  window.FFC_PX=PX;pageH=document.documentElement.scrollHeight/PX;const ex=innerWidth/PX/2-(FX0+FX1+1)/2,ey=innerHeight/PX/2-(FY0+FY1+1)/2;ox=Math.floor(ex)+1;baseOy=Math.floor(ey)+1;oy=baseOy;
+  W=Math.ceil(innerWidth/PX)+2;H=Math.ceil(innerHeight/PX)+2;cv.width=W;cv.height=H; // exact centring: integer canvas px + sub-px css shift, no stretch
+  cv.style.width=(W*PX)+'px';cv.style.height=(H*PX)+'px';cv.style.left=((ex-ox)*PX)+'px';cv.style.top=((ey-baseOy)*PX)+'px';window.FFC_GEOM={ox,oy:baseOy,lw,lh,FX0,FX1,FY0,FY1};
 }
 addEventListener('resize',resize);
 function load(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
 function pixels(img){const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const x=c.getContext('2d');x.drawImage(img,0,0);return x.getImageData(0,0,img.width,img.height).data;}
-Promise.all([load('ffc-sprite.png'),load('ffc-order.png')]).then(([sp,or])=>{
-  lw=sp.width;lh=sp.height;const d=pixels(sp),o=pixels(or);
+Promise.all([load('ffc-sprite.png?v=fa14572e'),load('ffc-order.png?v=125da5d9')]).then(([sp,or])=>{
+  lw=sp.width;lh=sp.height;if(or.width!==lw||or.height!==lh)console.error('ffc-order size mismatch');const d=pixels(sp),o=pixels(or);
   for(let y=0;y<lh;y++)for(let x=0;x<lw;x++){const i=(y*lw+x)*4;if(!d[i+3])continue;
     const lay=Math.round(o[i]/30),t=o[i+1]/255,ci=Math.round(o[i+2]/60),r=d[i],g=d[i+1],b=d[i+2];
     if(lay===1){const a=Math.random()*6.28,rr=.55+Math.random()*.6;
@@ -305,7 +307,7 @@ function frame(ts){
   </div>
   <div id="boot"><div class="bt">Starting Archive of Things...</div><div class="bar"><div id="bfill"></div></div></div>
 </section>
-<script src="scene.js"></script>
+<script src="scene.js?v=42fa01da"></script>
 <section id="sticky" aria-label="Sticky Board">
   <div id="sboard"></div>
   <canvas id="splat" aria-hidden="true"></canvas>
@@ -321,7 +323,7 @@ function frame(ts){
   </div>
   <div id="sword"></div>
 </section>
-<script src="sticky.js"></script>
+<script src="sticky.js?v=93328f23"></script>
 
 </body>
 </html>
