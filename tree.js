@@ -48,9 +48,9 @@ function makeGust(){const gg={t0:t,dir:Math.random()<.6?1:-1,s:.45+Math.random()
   gg.wind=u=>windBase+gg.dir*gg.s*gg.env(u)*(1+.22*Math.sin(u*6.3+gg.ph)+.12*Math.sin(u*13.7));return gg;}
 const windNow=()=>gust?gust.wind(t-gust.t0):windBase;
 function layout(){
-  const r=sec.getBoundingClientRect();PX=Math.max(3,Math.round(r.height/120));W=Math.ceil(r.width/PX);H=Math.ceil(r.height/PX);cv.width=W;cv.height=H;
-  sec.style.setProperty('--tpx',PX+'px');{const tm=document.getElementById('tmid'),gh=document.getElementById('tgnd').getBoundingClientRect().height,tb=r.height*.33+tm.offsetHeight*.44,avail=r.height-gh*.42-tb-16;
-   const sw=Math.round(Math.max(96,Math.min(225,Math.max(135,r.width*.145),avail*64/85)));sec.style.setProperty('--sw',sw+'px');}GY=H-5;if(!ready)return;
+  const r=sec.getBoundingClientRect();PX=r.width<600?3:Math.max(3,Math.round(r.height/120));W=Math.ceil(r.width/PX);H=Math.ceil(r.height/PX);cv.width=W;cv.height=H;
+  sec.style.setProperty('--tpx',PX+'px');document.getElementById('tgnd').style.height=(32*PX)+'px';{const tm=document.getElementById('tmid'),gh=document.getElementById('tgnd').getBoundingClientRect().height,tb=r.height*.33+tm.offsetHeight*.44,avail=r.height-gh*.42-tb-16;
+   const sw=Math.round(Math.max(96,Math.min(225,Math.max(135,r.width*.145),avail*64/85)));sec.style.setProperty('--sw',sw+'px');}GY=H-16;sec.style.setProperty('--sb',Math.round(32*PX*.42)+'px');if(!ready)return;
   rnd=mulberry(20261023);leafCache.clear();trees=[];const mob=r.width<700;
   const spots=mob?[[.15,.3,1,0],[.85,.3,1,.3]]:[[.11,.24,1,0],[.89,.24,1,.25],[.27,.15,.7,.6],[.73,.15,.7,.85]];
   for(const[fx,fw,sz,delay]of spots){
