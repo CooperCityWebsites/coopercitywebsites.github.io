@@ -7,8 +7,8 @@
 <link rel="icon" href="data:,">
 <style>
 html,body{margin:0;background:#07060d;overflow-x:hidden}
-:root{--u:min(1vh,.5625vw);--ce:calc(calc(400 * var(--u)) + max(calc(100 * var(--u)),560px));--th:max(calc(74 * var(--u)),500px);--ic:calc(100vw * 470 / 480 + 20px);--ih:calc(var(--ic) * 2.5);--lh:max(calc(130 * var(--u)),1000px)}
-body{height:calc(var(--ce) + 900px + var(--th) + var(--ih) + var(--lh))}
+:root{--u:min(1vh,.5625vw);--ce:calc(calc(400 * var(--u)) + max(calc(100 * var(--u)),560px));--th:max(calc(74 * var(--u)),500px);--ic:calc(100vw * 470 / 480 + 20px);--ih:calc(var(--ic) * 2.5);--lh:max(calc(130 * var(--u)),1000px);--wh:max(calc(90 * var(--u)),720px)}
+body{height:calc(var(--ce) + 900px + var(--th) + var(--ih) + var(--lh) + var(--wh))}
 #hint{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);color:#fff;font:500 13px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.12em;text-transform:lowercase;text-align:center;opacity:0;transition:opacity .6s ease;pointer-events:none;user-select:none}
 #hint svg{display:block;margin:6px auto 0;animation:bob 1.6s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
@@ -203,6 +203,17 @@ a.sblink b{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8p
 #tmid a{display:inline-block;padding:12px 18px;background:#6aa43e;color:#0b1a08;text-decoration:none;font-size:clamp(11px,1.1vw,14px);box-shadow:0 0 0 3px #000,inset -3px -3px 0 #3d7a2c,inset 3px 3px 0 #b8e27a}
 #tmid a:hover,#tmid a:focus-visible{background:#86bf52;outline:none}
 
+
+#waves{position:absolute;left:0;width:100%;top:calc(var(--ce) + 900px + var(--th) + var(--ih) + var(--lh));height:var(--wh);z-index:2;overflow:hidden;font-family:"Press Start 2P",monospace;color:#fff;background:#061222}
+#wcv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:none}
+#wmid{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);text-align:center;width:min(88%,640px);z-index:3;opacity:0;transition:opacity .7s steps(8),transform .7s steps(8);pointer-events:none}
+#waves.on #wmid{opacity:1;transform:translate(-50%,-56%);pointer-events:auto}
+#wmid h2{margin:0 0 10px;font-size:clamp(18px,3.2vw,36px);letter-spacing:.08em;text-transform:uppercase;color:#fff;text-shadow:3px 3px 0 #000,-2px -2px 0 #041018,0 0 12px rgba(80,180,255,.55)}
+#wmid p{margin:0 0 18px;font-size:clamp(9px,1.05vw,13px);line-height:1.7;color:#e8f6ff;text-shadow:2px 2px 0 #000}
+#wmid a{display:inline-block;padding:12px 18px;background:#1a8fd0;color:#041018;text-decoration:none;font-size:clamp(10px,1.1vw,14px);box-shadow:0 0 0 3px #000,inset -3px -3px 0 #0d5a8a,inset 3px 3px 0 #9ad8ff;text-shadow:none}
+#wmid a:hover,#wmid a:focus-visible{background:#3ab0f0;outline:none}
+#waves.fail #wmid{opacity:1;pointer-events:auto}
+#waves.idle #wmid{animation-play-state:paused}
 </style>
 <link rel="stylesheet" href="fonts/fonts.css?v=8fe0b7f8">
 </head>
@@ -473,7 +484,16 @@ function frame(ts){
 </div>
 <div class="cards"><a class="st" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:6%;--y:8%;--cw:min(12vw,160px);--rot:-8deg;--mx:4%;--my:10%;--mw:30vw"><span class="f"><span class="card sp"><img src="llc/ashaad.png?v=59016f9e" alt="Ashaad"></span><span class="cap">The Binding<br>of Ashaad</span></span></a><a class="st" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:77%;--y:6%;--cw:min(17vw,240px);--rot:7deg;--mx:56%;--my:8%;--mw:40vw"><span class="f"><span class="card "><img src="llc/ashaad-shot-px.png?v=11b51fbe" alt="The Binding of Ashaad title screen"></span><span class="cap">a brainrot roguelike</span></span></a><a class="st nm" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:4%;--y:50%;--cw:min(11vw,140px);--rot:6deg"><span class="f"><span class="card sp"><img src="llc/finley.png?v=ab2d538a" alt="Finley, secret boss"></span><span class="cap">secret boss: Finley</span></span></a><a class="st nm" href="https://landrcy.github.io/#ballfight" target="_blank" rel="noopener" style="--x:80%;--y:48%;--cw:min(16vw,230px);--rot:-6deg"><span class="f"><span class="card "><img src="llc/ballfight-px.png?v=e962b0a8" alt="Eternal Ball Fight arena"></span><span class="cap">Eternal Ball Fight</span></span></a><a class="st" href="https://coopercitywebsites.github.io/main/" target="_blank" rel="noopener" style="--x:13%;--y:79%;--cw:min(15vw,200px);--rot:-5deg;--mx:3%;--my:74%;--mw:40vw"><span class="f"><span class="card tx"><b>UNBLOCKED · VERY COMPLEX</b>Night Arena</span></span></a><a class="st" href="https://coopercitywebsites.github.io/main/" target="_blank" rel="noopener" style="--x:45%;--y:81%;--cw:min(10vw,130px);--rot:4deg;--mx:38%;--my:87%;--mw:24vw"><span class="f"><span class="card sp"><img src="llc/gow-cd-px.png?v=31de19e0" alt="Game of Websites disc"></span><span class="cap">Game of Websites</span></span></a><a class="st" href="https://coopercitywebsites.github.io/main/" target="_blank" rel="noopener" style="--x:69%;--y:78%;--cw:min(15vw,200px);--rot:6deg;--mx:57%;--my:73%;--mw:40vw"><span class="f"><span class="card tx"><b>PROJECT · COMPLEX</b>Archive of Things</span></span></a><a class="st nm" href="https://landrcy.github.io/binding-of-ashaad/" target="_blank" rel="noopener" style="--x:31%;--y:6%;--cw:min(8vw,100px);--rot:10deg"><span class="f"><span class="card sp"><img src="llc/emmanuel.png?v=155e4539" alt="Emmanuel"></span><span class="cap">Emmanuel</span></span></a></div><canvas class="riftfx" aria-hidden="true"></canvas>
 </section>
+<section id="waves" aria-label="Deep Sea">
+  <canvas id="wcv" aria-hidden="true"></canvas>
+  <div id="wmid">
+    <h2>Deep Sea</h2>
+    <p>waves crash · dive for treasure<br>a game by Pixel sprite king</p>
+    <a href="https://coopercitywebsites.github.io/DeepSea/" target="_blank" rel="noopener">play Deep Sea</a>
+  </div>
+</section>
 <script src="llc.js?v=b17b59ec"></script>
+<script src="waves.js?v=ds01a001"></script>
 <script src="tree.js?v=3297c8e5"></script>
 <script src="casino.js?v=91c43599"></script>
 <script src="sticky.js?v=e4b5ada3"></script>
